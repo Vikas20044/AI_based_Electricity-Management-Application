@@ -1,0 +1,16 @@
+{
+    "model_name": "Random Forest",
+    "train_metrics": {
+        "MAE": 8.393,
+        "MSE": 436.6447,
+        "RMSE": 20.896,
+        "R2": 0.936
+    },
+    "test_metrics": {
+        "MAE": 14.8406,
+        "MSE": 3951.5159,
+        "RMSE": 62.8611,
+        "R2": 0.6684
+    },
+    "training_time_seconds": 2.4342663288116455
+}

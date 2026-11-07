@@ -1,0 +1,16 @@
+{
+    "model_name": "Decision Tree",
+    "train_metrics": {
+        "MAE": 4.3361,
+        "MSE": 347.4827,
+        "RMSE": 18.6409,
+        "R2": 0.9491
+    },
+    "test_metrics": {
+        "MAE": 8.512,
+        "MSE": 4054.9276,
+        "RMSE": 63.6783,
+        "R2": 0.6597
+    },
+    "training_time_seconds": 0.31453514099121094
+}

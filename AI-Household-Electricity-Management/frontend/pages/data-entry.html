@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Household Connection Details - Electricity Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <script>
+    (function() {
+      if (!localStorage.getItem("ai_electricity_token")) {
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="app-header-brand">
+        Electricity Management
+        <span class="badge-tag">AI System</span>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="small text-muted" id="headerUserEmail">Loading...</span>
+        <button class="btn-signout" onclick="ApiClient.logout()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+
+    <div class="page-title-box">
+      <h2>Household Connection &amp; Electricity Baseline</h2>
+      <p>Review or update your registered household connection details, occupants count, baseline usage, and electricity appliances.</p>
+    </div>
+
+    <div id="saveAlert" class="alert-minimal d-none mb-3">
+      <strong>Saved!</strong> Household information and appliance inventory updated successfully.
+    </div>
+
+    <form id="dataEntryForm" autocomplete="off">
+      <div class="row g-4 mb-4">
+
+        <div class="col-md-6">
+          <div class="minimal-card h-100">
+            <div class="minimal-card-header">
+              <h6>Connection &amp; Structure Details</h6>
+              <span class="badge-bw">Connection</span>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="consumerNo">Consumer Account Number</label>
+              <input type="text" class="form-control" id="consumerNo" required autocomplete="off">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="meterNo">Meter Number</label>
+              <input type="text" class="form-control" id="meterNo" required autocomplete="off">
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-sm-6">
+                <label class="form-label small fw-semibold" for="district">District (Karnataka)</label>
+                <select class="form-select" id="district" required autocomplete="off">
+                  <option value="Tumakuru">Tumakuru</option>
+                  <option value="Bengaluru Urban">Bengaluru Urban</option>
+                  <option value="Bengaluru Rural">Bengaluru Rural</option>
+                  <option value="Mysuru">Mysuru</option>
+                  <option value="Mandya">Mandya</option>
+                  <option value="Hassan">Hassan</option>
+                  <option value="Belagavi">Belagavi</option>
+                  <option value="Kalaburagi">Kalaburagi</option>
+                  <option value="Raichur">Raichur</option>
+                  <option value="Dakshina Kannada">Dakshina Kannada</option>
+                  <option value="Davanagere">Davanagere</option>
+                  <option value="Shivamogga">Shivamogga</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label small fw-semibold" for="dwellingType">Dwelling Type</label>
+                <select class="form-select" id="dwellingType" required autocomplete="off">
+                  <option value="Apartment/flat">Apartment / Flat</option>
+                  <option value="Independent house">Independent House</option>
+                  <option value="Villa / Row house">Villa / Row House</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-2">
+              <div class="col-sm-6">
+                <label class="form-label small fw-semibold" for="sanctionedLoad">Sanctioned Load (kW)</label>
+                <input type="number" step="0.5" min="0.5" max="25" class="form-control" id="sanctionedLoad" required autocomplete="off">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label small fw-semibold" for="householdSize">Occupants (People)</label>
+                <input type="number" class="form-control" id="householdSize" min="1" max="20" required autocomplete="off">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="minimal-card h-100">
+            <div class="minimal-card-header">
+              <h6>Electricity Consumption Baseline</h6>
+              <span class="badge-bw">Baseline</span>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="pastMonthName">Reference Billing Month</label>
+              <input type="text" class="form-control" id="pastMonthName" required autocomplete="off">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="pastUnits">Past Month Electricity Consumption (kWh)</label>
+              <input type="number" step="0.1" class="form-control" id="pastUnits" min="0" max="1500" required autocomplete="off">
+              <div class="form-text small">Used by the ML model as the primary baseline feature to forecast the current bill.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="pastBill">Past Month Electricity Bill Paid (₹)</label>
+              <input type="number" step="1" class="form-control" id="pastBill" min="0" required autocomplete="off">
+            </div>
+
+            <div class="p-3 border rounded bg-light">
+              <span class="small text-muted d-block fw-bold text-uppercase">Entitlement Preview:</span>
+              <span class="h5 fw-bold text-dark d-block mb-1" id="previewEntitlement">-- kWh / month</span>
+              <span class="small text-muted">Eligible for 100% Zero Bill if usage stays below your entitlement limit and under Karnataka's 200 kWh ceiling.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="minimal-card mb-4" style="border: 2px solid #111111;">
+        <div class="minimal-card-header">
+          <h6>Household Electricity Appliances &amp; Connected Characteristics</h6>
+          <span class="badge-bw">Appliance Telemetry</span>
+        </div>
+
+        <p class="small text-muted mb-3">
+          Update the electricity appliances configured in your household. Machine learning prediction dynamically factors in this bottom-up inventory and connected load.
+        </p>
+
+        <div class="table-responsive mb-3 border rounded bg-white">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr class="small">
+                <th>Appliance</th>
+                <th>Category</th>
+                <th style="width: 110px;">Wattage (W)</th>
+                <th style="width: 85px;">Quantity</th>
+                <th style="width: 105px;">Hours/Day</th>
+                <th style="width: 95px;">Monthly kWh</th>
+                <th style="width: 45px;"></th>
+              </tr>
+            </thead>
+            <tbody id="applianceTableBody">
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+          <button type="button" class="btn-minimal-outline py-1 px-3 small" onclick="addCustomApplianceRow()">
+            + Add Appliance
+          </button>
+        </div>
+
+        <div class="p-3 border rounded bg-light">
+          <div class="row g-2 text-center small">
+            <div class="col-4">
+              <span class="text-muted d-block">Appliance Count</span>
+              <strong class="fs-6 text-dark" id="lblTotalAppCount">0 Units</strong>
+            </div>
+            <div class="col-4">
+              <span class="text-muted d-block">Connected Load</span>
+              <strong class="fs-6 text-dark" id="lblTotalAppLoad">0.00 kW</strong>
+            </div>
+            <div class="col-4">
+              <span class="text-muted d-block">Monthly Appliance Demand</span>
+              <strong class="fs-6 text-dark" id="lblTotalAppKwh">0.0 kWh</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 border rounded bg-white">
+        <div>
+          <button type="submit" class="btn-minimal-primary" id="btnSaveData">
+            Save Information
+          </button>
+        </div>
+        <div>
+          <a href="ai-forecast.html" class="btn-minimal-outline">
+            Return to AI Forecast &rarr;
+          </a>
+        </div>
+      </div>
+    </form>
+
+  </main>
+
+  <script src="../js/api/api-client.js"></script>
+  <script>
+    const user = ApiClient.getUser();
+    if (user && user.email) {
+      document.getElementById("headerUserEmail").innerText = user.email;
+    }
+
+    let appliancesList = [
+      { name: "Refrigerator", category: "Cooling", wattage: 250, quantity: 1, dailyHours: 24.0 },
+      { name: "Ceiling Fans", category: "Cooling", wattage: 75, quantity: 3, dailyHours: 10.0 },
+      { name: "LED Lighting", category: "Lighting", wattage: 15, quantity: 8, dailyHours: 6.0 },
+      { name: "Television", category: "Entertainment", wattage: 100, quantity: 1, dailyHours: 4.0 }
+    ];
+
+    function renderAppliances() {
+      const tbody = document.getElementById("applianceTableBody");
+      tbody.innerHTML = "";
+
+      appliancesList.forEach((app, idx) => {
+        const kwh = Math.round(((app.wattage * app.quantity * app.dailyHours * 30.0) / 1000.0) * 10.0) / 10.0;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <input type="text" class="form-control form-control-sm app-name" value="${app.name}" data-idx="${idx}" autocomplete="off" required>
+          </td>
+          <td>
+            <select class="form-select form-select-sm app-cat" data-idx="${idx}" autocomplete="off">
+              <option value="Cooling" ${app.category === "Cooling" ? "selected" : ""}>Cooling</option>
+              <option value="Lighting" ${app.category === "Lighting" ? "selected" : ""}>Lighting</option>
+              <option value="Entertainment" ${app.category === "Entertainment" ? "selected" : ""}>Entertainment</option>
+              <option value="Heating" ${app.category === "Heating" ? "selected" : ""}>Heating</option>
+              <option value="Motor" ${app.category === "Motor" ? "selected" : ""}>Motor</option>
+              <option value="Kitchen" ${app.category === "Kitchen" ? "selected" : ""}>Kitchen</option>
+              <option value="General" ${app.category === "General" ? "selected" : ""}>General</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm app-watt" value="${app.wattage}" min="1" max="10000" data-idx="${idx}" autocomplete="off" required>
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm app-qty" value="${app.quantity}" min="0" max="50" data-idx="${idx}" autocomplete="off" required>
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm app-hours" value="${app.dailyHours}" step="0.5" min="0" max="24" data-idx="${idx}" autocomplete="off" required>
+          </td>
+          <td class="small fw-bold text-dark">
+            <span id="rowKwh_${idx}">${kwh.toFixed(1)}</span>
+          </td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-dark border-0 p-0 fs-6 text-muted" onclick="removeApplianceRow(${idx})">&times;</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      attachRowListeners();
+      updateApplianceTotals();
+    }
+
+    function attachRowListeners() {
+      document.querySelectorAll(".app-name").forEach(el => {
+        el.addEventListener("input", function() {
+          const idx = parseInt(this.getAttribute("data-idx"));
+          appliancesList[idx].name = this.value;
+        });
+      });
+      document.querySelectorAll(".app-cat").forEach(el => {
+        el.addEventListener("change", function() {
+          const idx = parseInt(this.getAttribute("data-idx"));
+          appliancesList[idx].category = this.value;
+        });
+      });
+      document.querySelectorAll(".app-watt, .app-qty, .app-hours").forEach(el => {
+        el.addEventListener("input", function() {
+          const idx = parseInt(this.getAttribute("data-idx"));
+          const row = this.closest("tr");
+          const watt = parseFloat(row.querySelector(".app-watt").value) || 0;
+          const qty = parseInt(row.querySelector(".app-qty").value) || 0;
+          const hrs = parseFloat(row.querySelector(".app-hours").value) || 0;
+
+          appliancesList[idx].wattage = watt;
+          appliancesList[idx].quantity = qty;
+          appliancesList[idx].dailyHours = hrs;
+
+          const rowKwh = Math.round(((watt * qty * hrs * 30.0) / 1000.0) * 10.0) / 10.0;
+          document.getElementById(`rowKwh_${idx}`).innerText = rowKwh.toFixed(1);
+          updateApplianceTotals();
+        });
+      });
+    }
+
+    function updateApplianceTotals() {
+      let totalQty = 0;
+      let totalWatts = 0;
+      let totalKwh = 0;
+
+      appliancesList.forEach(a => {
+        const qty = Number(a.quantity) || 0;
+        const watt = Number(a.wattage) || 0;
+        const hrs = Number(a.dailyHours) || 0;
+
+        totalQty += qty;
+        totalWatts += (watt * qty);
+        totalKwh += ((watt * qty * hrs * 30.0) / 1000.0);
+      });
+
+      document.getElementById("lblTotalAppCount").innerText = totalQty + " Units";
+      document.getElementById("lblTotalAppLoad").innerText = (totalWatts / 1000.0).toFixed(2) + " kW";
+      document.getElementById("lblTotalAppKwh").innerText = totalKwh.toFixed(1) + " kWh";
+    }
+
+    function addCustomApplianceRow() {
+      appliancesList.push({
+        name: "Custom Appliance",
+        category: "General",
+        wattage: 100,
+        quantity: 1,
+        dailyHours: 2.0
+      });
+      renderAppliances();
+    }
+
+    function removeApplianceRow(idx) {
+      if (appliancesList.length <= 1) {
+        appliancesList[0].quantity = 0;
+        renderAppliances();
+        return;
+      }
+      appliancesList.splice(idx, 1);
+      renderAppliances();
+    }
+
+    document.getElementById("pastUnits").addEventListener("input", function() {
+      const units = parseFloat(this.value) || 0;
+      const entitled = Math.min(200.0, Math.round(units * 1.10 * 10.0) / 10.0);
+      document.getElementById("previewEntitlement").innerText = entitled.toFixed(1) + " kWh / month";
+    });
+
+    async function loadProfile() {
+      const profile = await ApiClient.getHouseholdProfile();
+      if (profile) {
+        if (profile.consumerNumber) document.getElementById("consumerNo").value = profile.consumerNumber;
+        if (profile.meterNumber) document.getElementById("meterNo").value = profile.meterNumber;
+        if (profile.district) document.getElementById("district").value = profile.district;
+        if (profile.dwellingType) document.getElementById("dwellingType").value = profile.dwellingType;
+        if (profile.sanctionedLoadKw) document.getElementById("sanctionedLoad").value = profile.sanctionedLoadKw;
+        if (profile.householdSize) document.getElementById("householdSize").value = profile.householdSize;
+        if (profile.pastMonthName) document.getElementById("pastMonthName").value = profile.pastMonthName;
+        if (profile.pastMonthUnitsKwh) {
+          document.getElementById("pastUnits").value = profile.pastMonthUnitsKwh;
+          const entitled = Math.min(200.0, Math.round(profile.pastMonthUnitsKwh * 1.10 * 10.0) / 10.0);
+          document.getElementById("previewEntitlement").innerText = entitled.toFixed(1) + " kWh / month";
+        }
+        if (profile.pastMonthBillAmount) document.getElementById("pastBill").value = profile.pastMonthBillAmount;
+
+        if (profile.appliances && Array.isArray(profile.appliances) && profile.appliances.length > 0) {
+          appliancesList = profile.appliances.map(a => ({
+            name: a.name,
+            category: a.category || "General",
+            wattage: a.wattage || 100,
+            quantity: a.quantity !== undefined ? a.quantity : 1,
+            dailyHours: a.dailyHours || 2.0
+          }));
+        }
+      }
+      renderAppliances();
+    }
+
+    document.getElementById("dataEntryForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const saveBtn = document.getElementById("btnSaveData");
+      const alertBox = document.getElementById("saveAlert");
+
+      saveBtn.disabled = true;
+      saveBtn.innerText = "Saving...";
+
+      const units = parseFloat(document.getElementById("pastUnits").value) || 160.0;
+      const entitled = Math.min(200.0, Math.round(units * 1.10 * 10.0) / 10.0);
+
+      const activeAppliances = appliancesList
+        .filter(a => a.name && a.name.trim() !== "" && a.quantity > 0)
+        .map(a => ({
+          name: a.name.trim(),
+          category: a.category || "General",
+          wattage: parseInt(a.wattage) || 100,
+          quantity: parseInt(a.quantity) || 1,
+          dailyHours: parseFloat(a.dailyHours) || 2.0,
+          monthlyKwh: Math.round(((a.wattage * a.quantity * a.dailyHours * 30.0) / 1000.0) * 10.0) / 10.0
+        }));
+
+      const payload = {
+        consumerNumber: document.getElementById("consumerNo").value.trim(),
+        meterNumber: document.getElementById("meterNo").value.trim(),
+        district: document.getElementById("district").value,
+        dwellingType: document.getElementById("dwellingType").value,
+        sanctionedLoadKw: parseFloat(document.getElementById("sanctionedLoad").value) || 2.0,
+        householdSize: parseInt(document.getElementById("householdSize").value) || 4,
+        pastMonthName: document.getElementById("pastMonthName").value.trim(),
+        pastMonthUnitsKwh: units,
+        pastMonthBillAmount: parseFloat(document.getElementById("pastBill").value) || 1120.0,
+        entitledUnitsKwh: entitled,
+        appliances: activeAppliances
+      };
+
+      await ApiClient.saveHouseholdProfile(payload);
+
+      alertBox.classList.remove("d-none");
+      saveBtn.disabled = false;
+      saveBtn.innerText = "Save Information";
+
+      setTimeout(() => {
+        alertBox.classList.add("d-none");
+      }, 3500);
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>

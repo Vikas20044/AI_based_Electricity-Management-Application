@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Gruha Jyothi Assessment - Electricity Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <script>
+    (function() {
+      if (!localStorage.getItem("ai_electricity_token")) {
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="app-header-brand">
+        Electricity Management
+        <span class="badge-tag">AI System</span>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="small text-muted" id="headerUserEmail">Loading...</span>
+        <button class="btn-signout" onclick="ApiClient.logout()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+
+    <div class="page-title-box">
+      <h2>Karnataka Gruha Jyothi Scheme Assessment</h2>
+      <p>Evaluate your household's 100% Zero-Bill eligibility based on active mid-month consumption tracking.</p>
+    </div>
+
+    <div class="minimal-card mb-4" style="border: 2px solid #111111;">
+      <div class="minimal-card-header">
+        <h5 class="fw-bold mb-0">Mid-Month Consumption Tracking</h5>
+        <span class="badge-bw">Active Telemetry</span>
+      </div>
+
+      <p class="text-muted small mb-3">
+        Enter your mid-cycle partial meter reading and elapsed billing days to evaluate your end-of-month Gruha Jyothi subsidy eligibility and zero-bill qualification.
+      </p>
+
+      <form id="gjMidMonthForm" autocomplete="off" class="mb-3">
+        <div class="row g-3 align-items-end">
+          <div class="col-sm-5">
+            <label class="form-label small fw-semibold" for="gjInputPartialKwh">Current Meter Reading (kWh consumed so far)</label>
+            <input type="number" class="form-control" id="gjInputPartialKwh" step="0.1" min="0" max="1000" autocomplete="off" required>
+          </div>
+
+          <div class="col-sm-4">
+            <label class="form-label small fw-semibold" for="gjInputDaysElapsed">Days Elapsed in Active Billing Month</label>
+            <input type="number" class="form-control" id="gjInputDaysElapsed" min="1" max="31" autocomplete="off" required>
+          </div>
+
+          <div class="col-sm-3">
+            <button type="submit" class="btn-minimal-primary w-100 py-2" id="btnUpdateGjAssessment">
+              Re-evaluate Assessment
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div class="p-3 border rounded bg-white mt-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+          <span class="small text-muted text-uppercase fw-semibold">Mid-Month Trajectory Status:</span>
+          <span class="badge-bw-solid" id="lblGjTrajectoryBadge">EVALUATING</span>
+        </div>
+
+        <div class="row g-2 text-center border-top pt-2">
+          <div class="col-sm-3">
+            <div class="small text-muted">Partial Consumption</div>
+            <div class="fw-bold text-dark fs-6"><span id="lblGjPartialKwh">--</span> kWh</div>
+          </div>
+          <div class="col-sm-3">
+            <div class="small text-muted">Days Elapsed</div>
+            <div class="fw-bold text-dark fs-6"><span id="lblGjDaysElapsed">--</span> Days</div>
+          </div>
+          <div class="col-sm-3">
+            <div class="small text-muted">Daily Burn Rate</div>
+            <div class="fw-bold text-dark fs-6"><span id="lblGjDailyRate">--</span> kWh/day</div>
+          </div>
+          <div class="col-sm-3">
+            <div class="small text-muted">Projected Total Demand</div>
+            <div class="fw-bold text-dark fs-6"><span id="lblGjProjectedUnits">--</span> kWh</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="minimal-card mb-4" style="border: 2px solid #111111;">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <span class="badge-bw-solid fs-6" id="gjStatusBadge">EVALUATING ELIGIBILITY...</span>
+        <span class="small text-muted">Consumer ID: <strong class="text-dark" id="gjConsumerNo">--</strong></span>
+      </div>
+
+      <h4 class="fw-bold mb-2" id="gjHeadline">Evaluating Gruha Jyothi Benefit</h4>
+      <p class="text-muted mb-4" id="gjGuidance">
+        Comparing your mid-month projected consumption against your historical entitlement limit and Karnataka state ceiling.
+      </p>
+
+      <div class="row g-3 text-center border-top pt-3">
+        <div class="col-sm-4">
+          <div class="small text-muted text-uppercase fw-semibold">Gross Commercial Bill</div>
+          <div class="h4 fw-bold text-dark mt-1">₹<span id="gjGrossBill">0.00</span></div>
+        </div>
+        <div class="col-sm-4">
+          <div class="small text-muted text-uppercase fw-semibold">Govt. Subsidy Deduction</div>
+          <div class="h4 fw-bold text-dark mt-1">-₹<span id="gjSubsidy">0.00</span></div>
+        </div>
+        <div class="col-sm-4">
+          <div class="small text-muted text-uppercase fw-semibold">Net Payable by You</div>
+          <div class="h4 fw-bold text-dark mt-1">₹<span id="gjNetPayable">0.00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="minimal-card h-100">
+          <div class="minimal-card-header">
+            <h6>1. Household Entitlement Limit</h6>
+            <span class="badge-bw">Rule 1</span>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="small text-muted">Projected: <strong id="valProj1">-- kWh</strong></span>
+              <span class="small text-muted">Entitlement: <strong id="valEntitle1">-- kWh</strong></span>
+            </div>
+            <div class="minimal-meter-track">
+              <div class="minimal-meter-fill" id="meterEntitleFill" style="width: 0%;"></div>
+            </div>
+          </div>
+          <p class="small text-muted mb-0">
+            Calculated as your reference monthly baseline (<span id="valBaseUnits">--</span> kWh) + 10% welfare buffer. If mid-month projected usage is under this limit, your entire electricity bill is waived.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="minimal-card h-100">
+          <div class="minimal-card-header">
+            <h6>2. Karnataka State 200 kWh Ceiling</h6>
+            <span class="badge-bw">Rule 2</span>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="small text-muted">Projected: <strong id="valProj2">-- kWh</strong></span>
+              <span class="small text-muted">State Max: <strong>200.0 kWh</strong></span>
+            </div>
+            <div class="minimal-meter-track">
+              <div class="minimal-meter-fill" id="meterCeilingFill" style="width: 0%;"></div>
+            </div>
+          </div>
+          <p class="small text-muted mb-0">
+            Under Karnataka State Policy, any domestic consumption crossing 200 units completely forfeits the welfare subsidy, and the consumer pays the full commercial bill.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="minimal-card mb-4">
+      <div class="minimal-card-header">
+        <h6>What-If Scenario Simulator</h6>
+        <span class="badge-bw-gray">Interactive Calculation</span>
+      </div>
+
+      <p class="small text-muted mb-3">
+        Simulate arbitrary electricity usage to verify the exact bill and subsidy outcome before the billing cycle closes.
+      </p>
+
+      <div class="row g-3 align-items-center mb-3">
+        <div class="col-sm-6">
+          <label class="form-label small fw-semibold" for="simUnitsInput">Simulate Monthly Consumption (kWh)</label>
+          <input type="number" class="form-control fw-bold" id="simUnitsInput" min="10" max="400" autocomplete="off">
+        </div>
+        <div class="col-sm-6 d-flex align-items-end gap-2 pt-sm-4">
+          <button type="button" class="btn-minimal-outline py-2 px-3 small" onclick="setSimValue(130)">130 kWh (Safe)</button>
+          <button type="button" class="btn-minimal-outline py-2 px-3 small" onclick="setSimValue(175)">175 kWh (Near Limit)</button>
+          <button type="button" class="btn-minimal-outline py-2 px-3 small" onclick="setSimValue(210)">210 kWh (>200 Ceiling)</button>
+        </div>
+      </div>
+
+      <div class="p-3 border rounded bg-light" id="simOutputBox">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+          <strong id="simStatusText">QUALIFIED: 100% ZERO BILL</strong>
+          <span class="badge-bw" id="simDiffCeiling">50.0 kWh Below Ceiling</span>
+        </div>
+        <div class="row g-2 text-center small">
+          <div class="col-4">
+            <span class="text-muted d-block">Gross Commercial Bill</span>
+            <strong class="fs-6 text-dark" id="simGross">₹0.00</strong>
+          </div>
+          <div class="col-4">
+            <span class="text-muted d-block">Govt Subsidy Credit</span>
+            <strong class="fs-6 text-dark" id="simSubsidy">-₹0.00</strong>
+          </div>
+          <div class="col-4">
+            <span class="text-muted d-block">Net Payable by You</span>
+            <strong class="fs-6 text-dark" id="simNet">₹0.00</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 border rounded bg-white">
+      <a href="ai-forecast.html" class="btn-minimal-outline">
+        &larr; Back to AI Forecast
+      </a>
+      <a href="payment.html" class="btn-minimal-primary">
+        Proceed to Payment Module &rarr;
+      </a>
+    </div>
+
+  </main>
+
+  <script src="../js/api/api-client.js"></script>
+  <script>
+    const user = ApiClient.getUser();
+    if (user && user.email) {
+      document.getElementById("headerUserEmail").innerText = user.email;
+    }
+
+    let globalEntitledUnits = 176.0;
+    let globalSanctionedLoad = 2.0;
+
+    async function loadAssessment(customPartial, customDays) {
+      let partial = customPartial;
+      let days = customDays;
+
+      if (partial === undefined || partial === null) {
+        const savedPartial = localStorage.getItem("mid_month_partial_kwh");
+        if (savedPartial) partial = parseFloat(savedPartial);
+      }
+      if (days === undefined || days === null) {
+        const savedDays = localStorage.getItem("mid_month_days_elapsed");
+        if (savedDays) days = parseInt(savedDays);
+      }
+
+      const assessment = await ApiClient.getGruhaJyothiAssessment(partial, days);
+      const forecast = await ApiClient.getAIForecast(partial, days);
+
+      if (!assessment || !forecast) return;
+
+      const currentPartial = (assessment.currentPartialKwh !== undefined && assessment.currentPartialKwh !== null)
+        ? assessment.currentPartialKwh
+        : (forecast.currentPartialKwh !== undefined ? forecast.currentPartialKwh : (partial || 80.0));
+
+      const currentDays = (assessment.daysElapsed !== undefined && assessment.daysElapsed !== null)
+        ? assessment.daysElapsed
+        : (forecast.daysElapsed !== undefined ? forecast.daysElapsed : (days || 15));
+
+      const dailyRate = assessment.dailyRunRateKwh || forecast.dailyRunRateKwh || (Math.round((currentPartial / currentDays) * 100) / 100);
+
+      document.getElementById("gjInputPartialKwh").value = currentPartial;
+      document.getElementById("gjInputDaysElapsed").value = currentDays;
+
+      document.getElementById("lblGjPartialKwh").innerText = Number(currentPartial).toFixed(1);
+      document.getElementById("lblGjDaysElapsed").innerText = currentDays;
+      document.getElementById("lblGjDailyRate").innerText = Number(dailyRate).toFixed(2);
+
+      globalEntitledUnits = assessment.entitledUnitsKwh || forecast.entitlementLimitKwh || 176.0;
+      globalSanctionedLoad = forecast.sanctionedLoadKw || 2.0;
+
+      const predicted = assessment.currentPredictedUnitsKwh || forecast.predictedKwh || 160.0;
+      document.getElementById("lblGjProjectedUnits").innerText = predicted.toFixed(1);
+
+      const entitled = globalEntitledUnits;
+      const gross = forecast.grossBillInr || 1120.0;
+      const subsidy = forecast.subsidyBenefitInr || (forecast.netPayableInr === 0 ? gross : 0);
+      const net = forecast.netPayableInr !== undefined ? forecast.netPayableInr : 0.0;
+
+      document.getElementById("gjConsumerNo").innerText = assessment.consumerNumber || "KAR-TMK-90214";
+      document.getElementById("gjGrossBill").innerText = gross.toFixed(2);
+      document.getElementById("gjSubsidy").innerText = subsidy.toFixed(2);
+      document.getElementById("gjNetPayable").innerText = net.toFixed(2);
+
+      const statusBadge = document.getElementById("gjStatusBadge");
+      const headline = document.getElementById("gjHeadline");
+      const guidance = document.getElementById("gjGuidance");
+      const trajBadge = document.getElementById("lblGjTrajectoryBadge");
+
+      if (assessment.subsidyStatus === "ELIGIBLE" || (predicted <= entitled && predicted <= 200.0)) {
+        statusBadge.innerText = "QUALIFIED: 100% ZERO BILL";
+        headline.innerText = "Your Household Retains 100% Zero-Bill Benefit";
+        guidance.innerText = assessment.guidanceMessage || 
+          `Based on your active mid-month tracking (${Number(currentPartial).toFixed(1)} kWh in ${currentDays} days), your projected usage of ${predicted.toFixed(1)} kWh is within your entitlement limit of ${entitled.toFixed(1)} kWh. Full subsidy is granted under the Karnataka Gruha Jyothi Scheme.`;
+        trajBadge.innerText = "ON TRACK FOR ZERO BILL";
+      } else if (assessment.subsidyStatus === "APPROACHING_THRESHOLD" || (predicted > entitled && predicted <= 200.0)) {
+        statusBadge.innerText = "PARTIAL SUBSIDY (EXCESS UNITS BILLED)";
+        headline.innerText = "Entitlement Exceeded (Under 200 kWh Ceiling)";
+        guidance.innerText = assessment.guidanceMessage || 
+          `Based on your active mid-month tracking (${Number(currentPartial).toFixed(1)} kWh in ${currentDays} days), your projected usage of ${predicted.toFixed(1)} kWh exceeds your entitlement limit of ${entitled.toFixed(1)} kWh. You receive subsidy on your entitled units, and will pay ₹${net.toFixed(2)} for excess units.`;
+        trajBadge.innerText = "APPROACHING LIMIT (EXCESS BILLED)";
+      } else {
+        statusBadge.innerText = "CEILING EXCEEDED (>200 kWh) - FULL BILL PAYABLE";
+        headline.innerText = "Gruha Jyothi Subsidy Forfeited";
+        guidance.innerText = assessment.guidanceMessage || 
+          `Based on your active mid-month tracking (${Number(currentPartial).toFixed(1)} kWh in ${currentDays} days), your projected consumption of ${predicted.toFixed(1)} kWh exceeds Karnataka's 200 kWh ceiling. The subsidy is completely revoked for this billing cycle.`;
+        trajBadge.innerText = "CEILING BREACH RISK (SUBSIDY FORFEITED)";
+      }
+
+      document.getElementById("valProj1").innerText = predicted.toFixed(1) + " kWh";
+      document.getElementById("valEntitle1").innerText = entitled.toFixed(1) + " kWh";
+      document.getElementById("valBaseUnits").innerText = (assessment.historical12MonthAvgKwh || 160.0).toFixed(1);
+      const pctEntitle = Math.min(100, Math.max(5, (predicted / entitled) * 100));
+      document.getElementById("meterEntitleFill").style.width = pctEntitle + "%";
+
+      document.getElementById("valProj2").innerText = predicted.toFixed(1) + " kWh";
+      const pctCeiling = Math.min(100, Math.max(5, (predicted / 200.0) * 100));
+      document.getElementById("meterCeilingFill").style.width = pctCeiling + "%";
+
+      document.getElementById("simUnitsInput").value = Math.round(predicted);
+      runSimulation(Math.round(predicted));
+    }
+
+    document.getElementById("gjMidMonthForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const partialVal = parseFloat(document.getElementById("gjInputPartialKwh").value);
+      const daysVal = parseInt(document.getElementById("gjInputDaysElapsed").value);
+
+      if (!isNaN(partialVal) && !isNaN(daysVal) && daysVal > 0) {
+        localStorage.setItem("mid_month_partial_kwh", partialVal);
+        localStorage.setItem("mid_month_days_elapsed", daysVal);
+        loadAssessment(partialVal, daysVal);
+      }
+    });
+
+    function setSimValue(val) {
+      document.getElementById("simUnitsInput").value = val;
+      runSimulation(val);
+    }
+
+    document.getElementById("simUnitsInput").addEventListener("input", function() {
+      runSimulation(parseFloat(this.value) || 0);
+    });
+
+    function runSimulation(units) {
+      const calc = ApiClient.calculateLocalBill(units, globalSanctionedLoad, globalEntitledUnits);
+
+      document.getElementById("simGross").innerText = "₹" + calc.grossBill.toFixed(2);
+      document.getElementById("simSubsidy").innerText = "-₹" + calc.subsidyDeduction.toFixed(2);
+      document.getElementById("simNet").innerText = "₹" + calc.netPayable.toFixed(2);
+
+      const statusEl = document.getElementById("simStatusText");
+      const diffEl = document.getElementById("simDiffCeiling");
+
+      const diff = 200.0 - units;
+      if (diff >= 0) {
+        diffEl.innerText = diff.toFixed(1) + " kWh Below 200 Ceiling";
+      } else {
+        diffEl.innerText = Math.abs(diff).toFixed(1) + " kWh Over Ceiling (Penalty)";
+      }
+
+      if (calc.subsidyStatus === "ELIGIBLE") {
+        statusEl.innerText = "QUALIFIED: 100% ZERO BILL (₹0.00 Payable)";
+      } else if (calc.subsidyStatus === "APPROACHING_THRESHOLD") {
+        statusEl.innerText = "PARTIAL SUBSIDY (Excess Units Billed: ₹" + calc.netPayable.toFixed(2) + ")";
+      } else {
+        statusEl.innerText = "CEILING EXCEEDED (>200 kWh) - FULL COMMERCIAL BILL";
+      }
+    }
+
+    loadAssessment();
+  </script>
+</body>
+</html>

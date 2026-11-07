@@ -1,0 +1,82 @@
+{
+    "Linear Regression": {
+        "model_name": "Linear Regression",
+        "train_metrics": {
+            "MAE": 19.5242,
+            "MSE": 1182.9818,
+            "RMSE": 34.3945,
+            "R2": 0.8266
+        },
+        "test_metrics": {
+            "MAE": 28.2591,
+            "MSE": 3738.3687,
+            "RMSE": 61.1422,
+            "R2": 0.6863
+        },
+        "training_time_seconds": 0.042180776596069336
+    },
+    "Decision Tree": {
+        "model_name": "Decision Tree",
+        "train_metrics": {
+            "MAE": 4.3361,
+            "MSE": 347.4827,
+            "RMSE": 18.6409,
+            "R2": 0.9491
+        },
+        "test_metrics": {
+            "MAE": 8.512,
+            "MSE": 4054.9276,
+            "RMSE": 63.6783,
+            "R2": 0.6597
+        },
+        "training_time_seconds": 0.31453514099121094
+    },
+    "Random Forest": {
+        "model_name": "Random Forest",
+        "train_metrics": {
+            "MAE": 8.393,
+            "MSE": 436.6447,
+            "RMSE": 20.896,
+            "R2": 0.936
+        },
+        "test_metrics": {
+            "MAE": 14.8406,
+            "MSE": 3951.5159,
+            "RMSE": 62.8611,
+            "R2": 0.6684
+        },
+        "training_time_seconds": 2.4342663288116455
+    },
+    "XGBoost": {
+        "model_name": "XGBoost",
+        "train_metrics": {
+            "MAE": 9.9808,
+            "MSE": 475.505,
+            "RMSE": 21.8061,
+            "R2": 0.9303
+        },
+        "test_metrics": {
+            "MAE": 16.2979,
+            "MSE": 4111.1927,
+            "RMSE": 64.1186,
+            "R2": 0.655
+        },
+        "training_time_seconds": 2.131218910217285
+    },
+    "KNN": {
+        "model_name": "KNN",
+        "train_metrics": {
+            "MAE": 16.7042,
+            "MSE": 890.2171,
+            "RMSE": 29.8365,
+            "R2": 0.8695
+        },
+        "test_metrics": {
+            "MAE": 26.4757,
+            "MSE": 4696.2459,
+            "RMSE": 68.5292,
+            "R2": 0.6059
+        },
+        "training_time_seconds": 0.0035851001739501953
+    }
+}

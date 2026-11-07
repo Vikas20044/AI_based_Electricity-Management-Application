@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>AI Electricity Forecast &amp; Mid-Month Analysis - Electricity Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <script>
+    (function() {
+      if (!localStorage.getItem("ai_electricity_token")) {
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="app-header-brand">
+        Electricity Management
+        <span class="badge-tag">AI System</span>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="small text-muted" id="headerUserEmail">Loading...</span>
+        <button class="btn-signout" onclick="ApiClient.logout()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+
+    <div class="page-title-box d-flex justify-content-between align-items-end flex-wrap gap-2">
+      <div>
+        <h2>AI Electricity Forecasting &amp; Mid-Month Tracking</h2>
+        <p>Real-time machine learning projection, budget threshold warning &amp; burn-rate pacing for your active cycle.</p>
+      </div>
+      <div>
+        <span class="badge-bw-solid" id="badgeModelName">ML Microservice (Port 8000)</span>
+      </div>
+    </div>
+
+    <div class="minimal-card mb-4" style="border: 2px solid #111111;">
+      <div class="minimal-card-header">
+        <h5 class="fw-bold mb-0">Mid-Month Consumption Tracking</h5>
+        <span class="badge-bw">Interactive Feature</span>
+      </div>
+
+      <p class="text-muted small mb-3">
+        Enter your mid-cycle partial meter reading and days elapsed to simulate your end-of-month trajectory, evaluate subsidy risk, and calibrate daily pacing.
+      </p>
+
+      <form id="midMonthForm" autocomplete="off" class="mb-3">
+        <div class="row g-3 align-items-end">
+          <div class="col-sm-5">
+            <label class="form-label small fw-semibold" for="inputPartialKwh">Current Meter Reading (kWh consumed so far)</label>
+            <input type="number" class="form-control" id="inputPartialKwh" step="0.1" min="0" max="1000" autocomplete="off" required>
+          </div>
+
+          <div class="col-sm-4">
+            <label class="form-label small fw-semibold" for="inputDaysElapsed">Days Elapsed in Active Billing Month</label>
+            <input type="number" class="form-control" id="inputDaysElapsed" min="1" max="31" autocomplete="off" required>
+          </div>
+
+          <div class="col-sm-3">
+            <button type="submit" class="btn-minimal-primary w-100 py-2" id="btnUpdateMidMonth">
+              Update Forecast
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div class="p-3 border rounded bg-white mt-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+          <span class="small text-muted text-uppercase fw-semibold">Pace Trajectory Assessment:</span>
+          <span class="badge-bw-solid" id="midMonthStatusBadge">ON TRACK</span>
+        </div>
+        <p class="small text-dark mb-3" id="midMonthAdvisory">
+          Calculating mid-month trajectory...
+        </p>
+
+        <div class="row g-2 text-center border-top pt-2">
+          <div class="col-sm-4">
+            <div class="small text-muted">Daily Burn Rate</div>
+            <div class="fw-bold text-dark fs-6"><span id="metricDailyBurn">--</span> kWh/day</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="small text-muted">Est. Remaining Usage</div>
+            <div class="fw-bold text-dark fs-6"><span id="metricRemaining">--</span> kWh</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="small text-muted">Safety Margin to 200 Limit</div>
+            <div class="fw-bold text-dark fs-6"><span id="metricSafetyMargin">--</span> kWh</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-box">
+          <div class="stat-label">AI Predicted Usage</div>
+          <div class="stat-value"><span id="forecastUnits">--</span> <span class="stat-unit">kWh</span></div>
+          <p class="stat-subtext">End-of-month projected demand</p>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-box">
+          <div class="stat-label">Daily Burn Rate</div>
+          <div class="stat-value"><span id="forecastDailyRate">--</span> <span class="stat-unit">kWh/day</span></div>
+          <p class="stat-subtext">Continuous consumption pace</p>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-box">
+          <div class="stat-label">Gross Tariff Bill</div>
+          <div class="stat-value">₹<span id="forecastGrossBill">--</span></div>
+          <p class="stat-subtext">KERC pre-subsidy commercial tariff</p>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="stat-box">
+          <div class="stat-label">Ceiling Safety Margin</div>
+          <div class="stat-value"><span id="forecastMargin">--</span> <span class="stat-unit">kWh</span></div>
+          <p class="stat-subtext" id="forecastMarginText">Under 200 kWh ceiling</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="minimal-card mb-4" style="border: 2px solid #111111;">
+      <div class="minimal-card-header">
+        <h6 class="fw-bold mb-0">Monthly Electricity Bill Budget Threshold Tracker</h6>
+        <span class="badge-bw-solid" id="badgeBudgetStatus">WITHIN BUDGET</span>
+      </div>
+
+      <p class="text-muted small mb-3">
+        Set your monthly electricity spending limit (budget). The AI model evaluates your projected end-of-month electricity bill against this threshold and issues real-time warnings if you are approaching or crossing it.
+      </p>
+
+      <form id="budgetThresholdForm" autocomplete="off" class="mb-3">
+        <div class="row g-3 align-items-end">
+          <div class="col-sm-5">
+            <label class="form-label small fw-semibold" for="inputBudgetInr">Monthly Electricity Budget Limit (₹)</label>
+            <input type="number" class="form-control fw-bold" id="inputBudgetInr" step="50" min="100" max="50000" autocomplete="off" required>
+          </div>
+          <div class="col-sm-4 d-flex gap-2">
+            <button type="button" class="btn-minimal-outline py-2 px-3 small w-100" onclick="setPresetBudget(1500)">₹1500</button>
+            <button type="button" class="btn-minimal-outline py-2 px-3 small w-100" onclick="setPresetBudget(2500)">₹2500</button>
+            <button type="button" class="btn-minimal-outline py-2 px-3 small w-100" onclick="setPresetBudget(3500)">₹3500</button>
+          </div>
+          <div class="col-sm-3">
+            <button type="submit" class="btn-minimal-primary w-100 py-2" id="btnUpdateBudget">
+              Apply Budget Threshold
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div class="mb-3">
+        <div class="d-flex justify-content-between small text-muted mb-1">
+          <span>₹0.00 (Base)</span>
+          <span>Projected Bill: <strong class="text-dark">₹<span id="lblBudgetProjectedBill">0.00</span></strong></span>
+          <span>Budget Threshold: <strong class="text-dark">₹<span id="lblBudgetThresholdLimit">2500.00</span></strong></span>
+        </div>
+
+        <div class="minimal-meter-track">
+          <div class="minimal-meter-fill" id="meterBudgetFill" style="width: 0%;"></div>
+        </div>
+
+        <div class="d-flex justify-content-between small text-muted mt-1">
+          <span id="lblBudgetRemainingBuffer">Remaining Buffer: ₹0.00</span>
+          <span id="lblBudgetPercent">0% of Budget Utilized</span>
+        </div>
+      </div>
+
+      <div class="p-3 border rounded bg-white" id="budgetWarningBox">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+          <span class="small text-muted text-uppercase fw-semibold">Model Forecast Assessment:</span>
+          <span class="badge-bw" id="lblBudgetWarningBadge">EVALUATING</span>
+        </div>
+        <p class="small text-dark mb-0" id="lblBudgetWarningText">
+          Evaluating projected electricity bill against your monthly budget...
+        </p>
+      </div>
+    </div>
+
+    <div class="minimal-card mb-4">
+      <div class="minimal-card-header">
+        <h6>Current Forecast vs. Karnataka 200 kWh Ceiling Tracker</h6>
+        <span class="badge-bw" id="meterCeilingStatus">EVALUATING</span>
+      </div>
+
+      <div class="mb-2">
+        <div class="d-flex justify-content-between small text-muted mb-1">
+          <span>0 kWh (Base)</span>
+          <span>Entitlement Limit: <strong class="text-dark" id="lblEntitlement">-- kWh</strong></span>
+          <span>State Ceiling: <strong class="text-dark">200.0 kWh</strong></span>
+        </div>
+
+        <div class="minimal-meter-track">
+          <div class="minimal-meter-fill" id="forecastMeterFill" style="width: 0%;"></div>
+        </div>
+
+        <div class="d-flex justify-content-between small text-muted mt-1">
+          <span>Projected: <strong class="text-dark" id="lblProjected">-- kWh</strong></span>
+          <span id="lblPercent">0% of 200-Unit Ceiling</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="minimal-card mb-4">
+      <div class="minimal-card-header">
+        <h6>Registered Household Parameters</h6>
+        <span class="badge-bw-gray">Profile Data</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table-minimal">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Registered Value</th>
+              <th>Relevance to Model</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Consumer Account ID</strong></td>
+              <td id="featConsumerNo">--</td>
+              <td>Identifier for tariff jurisdiction &amp; meter ledger</td>
+            </tr>
+            <tr>
+              <td><strong>District &amp; Location</strong></td>
+              <td id="featDistrict">--</td>
+              <td>Climatic normal matching &amp; weather proxy</td>
+            </tr>
+            <tr>
+              <td><strong>Historical Baseline Usage</strong></td>
+              <td id="featPastUnits">-- kWh</td>
+              <td>Baseline weight ($t-1$) for recurrent demand</td>
+            </tr>
+            <tr>
+              <td><strong>Household Occupants</strong></td>
+              <td id="featOccupants">-- Members</td>
+              <td>Per-capita electrical workload estimation</td>
+            </tr>
+            <tr>
+              <td><strong>Sanctioned Load</strong></td>
+              <td id="featLoad">-- kW</td>
+              <td>Base utility fixed charges (₹70.0/kW)</td>
+            </tr>
+            <tr>
+              <td><strong>Appliance Inventory</strong></td>
+              <td id="featAppCount">-- Units</td>
+              <td>Connected electricity appliance devices</td>
+            </tr>
+            <tr>
+              <td><strong>Connected Appliance Load</strong></td>
+              <td id="featAppLoad">-- kW</td>
+              <td>Bottom-up electrical capacity feature for ML</td>
+            </tr>
+            <tr>
+              <td><strong>Appliance Monthly Demand</strong></td>
+              <td id="featAppKwh">-- kWh</td>
+              <td>Engineering bottom-up characteristic prior</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 border rounded bg-white">
+      <a href="data-entry.html" class="small text-muted">
+        &larr; Edit Household Connection Details
+      </a>
+      <a href="gruha-jyothi.html" class="btn-minimal-primary">
+        Proceed to Gruha Jyothi Assessment &rarr;
+      </a>
+    </div>
+
+  </main>
+
+  <script src="../js/api/api-client.js"></script>
+  <script>
+    const user = ApiClient.getUser();
+    if (user && user.email) {
+      document.getElementById("headerUserEmail").innerText = user.email;
+    }
+
+    let currentForecastData = null;
+
+    async function loadForecast(partialKwh, daysElapsed, budgetInr) {
+      try {
+        if (budgetInr === undefined || budgetInr === null) {
+          const savedBudget = localStorage.getItem("user_monthly_budget");
+          budgetInr = savedBudget ? parseFloat(savedBudget) : 2500.0;
+        }
+        document.getElementById("inputBudgetInr").value = budgetInr;
+
+        const profile = await ApiClient.getHouseholdProfile();
+        if (profile) {
+          document.getElementById("featConsumerNo").innerText = profile.consumerNumber || "KAR-TMK-90214";
+          document.getElementById("featDistrict").innerText = (profile.district || "Tumakuru") + ", Karnataka";
+          document.getElementById("featPastUnits").innerText = (profile.pastMonthUnitsKwh || 160.0) + " kWh";
+          document.getElementById("featOccupants").innerText = (profile.householdSize || 4) + " Members";
+          document.getElementById("featLoad").innerText = (profile.sanctionedLoadKw || 2.0) + " kW";
+
+          if (!partialKwh && !daysElapsed) {
+            const savedPartial = localStorage.getItem("mid_month_partial_kwh");
+            const savedDays = localStorage.getItem("mid_month_days_elapsed");
+            if (savedPartial && savedDays) {
+              partialKwh = parseFloat(savedPartial);
+              daysElapsed = parseInt(savedDays);
+              document.getElementById("inputPartialKwh").value = partialKwh;
+              document.getElementById("inputDaysElapsed").value = daysElapsed;
+            } else {
+              const defaultDays = 15;
+              const defaultPartial = Math.round((Number(profile.pastMonthUnitsKwh || 160) * (defaultDays / 30.0)) * 10.0) / 10.0;
+              document.getElementById("inputPartialKwh").value = defaultPartial;
+              document.getElementById("inputDaysElapsed").value = defaultDays;
+            }
+          }
+        }
+
+        const data = await ApiClient.getAIForecast(partialKwh, daysElapsed, budgetInr);
+        if (!data) return;
+
+        currentForecastData = data;
+
+        document.getElementById("badgeModelName").innerText = data.modelAlgorithm || "Linear Regression (Port 8000)";
+        document.getElementById("forecastUnits").innerText = data.predictedKwh.toFixed(1);
+        document.getElementById("forecastDailyRate").innerText = data.dailyRunRateKwh.toFixed(2);
+        document.getElementById("forecastGrossBill").innerText = data.grossBillInr.toFixed(2);
+
+        document.getElementById("featAppCount").innerText = (data.applianceCount || 4) + " Units";
+        document.getElementById("featAppLoad").innerText = (data.totalApplianceLoadKw || 1.5).toFixed(2) + " kW";
+        document.getElementById("featAppKwh").innerText = (data.applianceMonthlyKwh || 140.0).toFixed(1) + " kWh";
+
+        const margin = data.ceilingMarginKwh;
+        document.getElementById("forecastMargin").innerText = Math.abs(margin).toFixed(1);
+        if (margin >= 0) {
+          document.getElementById("forecastMarginText").innerText = "Under 200 kWh ceiling";
+          document.getElementById("meterCeilingStatus").innerText = "WITHIN CEILING";
+        } else {
+          document.getElementById("forecastMarginText").innerText = "OVER 200 kWh ceiling!";
+          document.getElementById("meterCeilingStatus").innerText = "CEILING BREACHED";
+        }
+
+        const pct = Math.min(100, Math.round((data.predictedKwh / 200.0) * 100));
+        document.getElementById("forecastMeterFill").style.width = pct + "%";
+        document.getElementById("lblEntitlement").innerText = (data.entitlementLimitKwh || 176.0).toFixed(1) + " kWh";
+        document.getElementById("lblProjected").innerText = data.predictedKwh.toFixed(1) + " kWh";
+        document.getElementById("lblPercent").innerText = pct + "% of 200-Unit Ceiling";
+
+        const userBudget = data.monthlyBudgetInr || budgetInr || 2500.0;
+        const projectedBill = data.grossBillInr || 0.0;
+        const utilPct = data.budgetUtilizationPct !== undefined
+          ? data.budgetUtilizationPct
+          : Math.round((projectedBill / userBudget) * 1000.0) / 10.0;
+        const budgetMargin = data.budgetMarginInr !== undefined
+          ? data.budgetMarginInr
+          : Math.round((userBudget - projectedBill) * 100.0) / 100.0;
+
+        document.getElementById("lblBudgetProjectedBill").innerText = projectedBill.toFixed(2);
+        document.getElementById("lblBudgetThresholdLimit").innerText = userBudget.toFixed(2);
+        const meterBudgetPct = Math.min(100, Math.max(5, Math.round(utilPct)));
+        document.getElementById("meterBudgetFill").style.width = meterBudgetPct + "%";
+
+        const badgeBudget = document.getElementById("badgeBudgetStatus");
+        const badgeWarning = document.getElementById("lblBudgetWarningBadge");
+        const warningText = document.getElementById("lblBudgetWarningText");
+
+        if (data.budgetStatus === "WITHIN_BUDGET" || utilPct < 80.0) {
+          badgeBudget.innerText = "WITHIN BUDGET";
+          badgeWarning.innerText = "SAFE CONSUMPTION";
+          document.getElementById("lblBudgetRemainingBuffer").innerText = `Remaining Buffer: +₹${budgetMargin.toFixed(2)}`;
+          document.getElementById("lblBudgetPercent").innerText = `${utilPct.toFixed(1)}% of Budget Utilized`;
+          warningText.innerText = data.budgetWarningMessage ||
+            `Safe: Projected electricity bill of ₹${projectedBill.toFixed(2)} is well within your monthly budget of ₹${userBudget.toFixed(2)} (${utilPct.toFixed(1)}% utilized). Remaining buffer is ₹${budgetMargin.toFixed(2)}.`;
+        } else if (data.budgetStatus === "APPROACHING_BUDGET" || (utilPct >= 80.0 && utilPct <= 100.0)) {
+          badgeBudget.innerText = "APPROACHING BUDGET LIMIT";
+          badgeWarning.innerText = "BUDGET WARNING";
+          document.getElementById("lblBudgetRemainingBuffer").innerText = `Caution Buffer: +₹${budgetMargin.toFixed(2)}`;
+          document.getElementById("lblBudgetPercent").innerText = `${utilPct.toFixed(1)}% of Budget Utilized`;
+          warningText.innerText = data.budgetWarningMessage ||
+            `Warning: Projected electricity bill of ₹${projectedBill.toFixed(2)} is approaching your monthly budget of ₹${userBudget.toFixed(2)} (${utilPct.toFixed(1)}% utilized). Remaining buffer is only ₹${budgetMargin.toFixed(2)}. Consider moderating heavy appliance usage.`;
+        } else {
+          badgeBudget.innerText = "BUDGET EXCEEDED";
+          badgeWarning.innerText = "BUDGET BREACH ALERT";
+          document.getElementById("lblBudgetRemainingBuffer").innerText = `Over Budget: -₹${Math.abs(budgetMargin).toFixed(2)}`;
+          document.getElementById("lblBudgetPercent").innerText = `${utilPct.toFixed(1)}% of Budget (EXCEEDED)`;
+          warningText.innerText = data.budgetWarningMessage ||
+            `Alert: Model forecasts your electricity bill of ₹${projectedBill.toFixed(2)} will cross your budget threshold of ₹${userBudget.toFixed(2)} by ₹${Math.abs(budgetMargin).toFixed(2)} (${utilPct.toFixed(1)}% of budget)! Immediate load reduction recommended.`;
+        }
+
+        document.getElementById("metricDailyBurn").innerText = data.dailyRunRateKwh.toFixed(2);
+        document.getElementById("metricRemaining").innerText = (data.projectedRemainingKwh || 0.0).toFixed(1);
+        document.getElementById("metricSafetyMargin").innerText = (margin >= 0 ? "+" : "") + margin.toFixed(1);
+
+        const badge = document.getElementById("midMonthStatusBadge");
+        if (data.predictedKwh <= data.entitlementLimitKwh && data.predictedKwh <= 200.0) {
+          badge.innerText = "ON TRACK FOR ZERO BILL";
+        } else if (data.predictedKwh > data.entitlementLimitKwh && data.predictedKwh <= 200.0) {
+          badge.innerText = "APPROACHING ENTITLEMENT";
+        } else {
+          badge.innerText = "CEILING BREACH RISK";
+        }
+
+        document.getElementById("midMonthAdvisory").innerText = data.paceAdvisory || 
+          `At current pace of ${data.dailyRunRateKwh.toFixed(2)} kWh/day, projected consumption is ${data.predictedKwh.toFixed(1)} kWh.`;
+
+      } catch (err) {
+        console.error("Error loading forecast:", err);
+      }
+    }
+
+    document.getElementById("midMonthForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const partial = parseFloat(document.getElementById("inputPartialKwh").value);
+      const days = parseInt(document.getElementById("inputDaysElapsed").value);
+      const budgetVal = parseFloat(document.getElementById("inputBudgetInr").value) || 2500.0;
+
+      if (!isNaN(partial) && !isNaN(days) && days > 0) {
+        localStorage.setItem("mid_month_partial_kwh", partial);
+        localStorage.setItem("mid_month_days_elapsed", days);
+        loadForecast(partial, days, budgetVal);
+      }
+    });
+
+    document.getElementById("budgetThresholdForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const budgetVal = parseFloat(document.getElementById("inputBudgetInr").value);
+      if (!isNaN(budgetVal) && budgetVal > 0) {
+        localStorage.setItem("user_monthly_budget", budgetVal);
+        const partial = parseFloat(document.getElementById("inputPartialKwh").value);
+        const days = parseInt(document.getElementById("inputDaysElapsed").value);
+        loadForecast(partial, days, budgetVal);
+      }
+    });
+
+    function setPresetBudget(val) {
+      document.getElementById("inputBudgetInr").value = val;
+      localStorage.setItem("user_monthly_budget", val);
+      const partial = parseFloat(document.getElementById("inputPartialKwh").value);
+      const days = parseInt(document.getElementById("inputDaysElapsed").value);
+      loadForecast(partial, days, val);
+    }
+
+    window.addEventListener("DOMContentLoaded", function() {
+      loadForecast();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>User Registration &amp; Household Setup - Electricity Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body style="background-color: #f7f7f7;">
+
+  <div class="container py-5" style="max-width: 860px;">
+
+    <div class="minimal-card p-4 p-md-5" style="border: 2px solid #111111;">
+
+      <div class="text-center mb-4 pb-3 border-bottom">
+        <h3 class="fw-bold mb-1 text-uppercase tracking-tight">Create Account &amp; Household Setup</h3>
+        <p class="text-muted small mb-0">Register your user profile, connection details, baseline consumption, and electrical appliances</p>
+      </div>
+
+      <div id="registerAlertMsg" class="alert-minimal d-none mb-4 py-2 px-3 small"></div>
+
+      <form id="registerForm" autocomplete="off">
+
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+            <h6 class="fw-bold mb-0 text-dark">1. User Credentials</h6>
+            <span class="badge-bw">Account</span>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regFullName">Full Name *</label>
+              <input type="text" class="form-control" id="regFullName" required autocomplete="off">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regEmail">Email Address *</label>
+              <input type="email" class="form-control" id="regEmail" required autocomplete="off">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regPhone">Mobile Number</label>
+              <input type="tel" class="form-control" id="regPhone" autocomplete="off">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regPassword">Password *</label>
+              <input type="password" class="form-control" id="regPassword" minlength="6" required autocomplete="off">
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+            <h6 class="fw-bold mb-0 text-dark">2. Household &amp; Connection Details</h6>
+            <span class="badge-bw">Connection</span>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regConsumerNo">Consumer Account Number *</label>
+              <input type="text" class="form-control" id="regConsumerNo" required autocomplete="off">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regMeterNo">Meter Number *</label>
+              <input type="text" class="form-control" id="regMeterNo" required autocomplete="off">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regDistrict">District (Karnataka) *</label>
+              <select class="form-select" id="regDistrict" required autocomplete="off">
+                <option value="" disabled selected>-- Select District --</option>
+                <option value="Tumakuru">Tumakuru</option>
+                <option value="Bengaluru Urban">Bengaluru Urban</option>
+                <option value="Bengaluru Rural">Bengaluru Rural</option>
+                <option value="Mysuru">Mysuru</option>
+                <option value="Mandya">Mandya</option>
+                <option value="Hassan">Hassan</option>
+                <option value="Belagavi">Belagavi</option>
+                <option value="Kalaburagi">Kalaburagi</option>
+                <option value="Raichur">Raichur</option>
+                <option value="Dakshina Kannada">Dakshina Kannada</option>
+                <option value="Davanagere">Davanagere</option>
+                <option value="Shivamogga">Shivamogga</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regDwellingType">Dwelling Architecture *</label>
+              <select class="form-select" id="regDwellingType" required autocomplete="off">
+                <option value="Apartment/flat" selected>Apartment / Flat</option>
+                <option value="Independent house">Independent House</option>
+                <option value="Villa / Row house">Villa / Row House</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regOccupants">Household Occupants Count *</label>
+              <input type="number" class="form-control" id="regOccupants" min="1" max="20" required autocomplete="off">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold" for="regLoad">Sanctioned Electrical Load (kW) *</label>
+              <input type="number" class="form-control" id="regLoad" step="0.5" min="0.5" max="25" required autocomplete="off">
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+            <h6 class="fw-bold mb-0 text-dark">3. Baseline Electricity Details</h6>
+            <span class="badge-bw">Baseline</span>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold" for="regPastMonth">Past Reference Month *</label>
+              <input type="text" class="form-control" id="regPastMonth" required autocomplete="off">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold" for="regPastUnits">Units Consumed (kWh) *</label>
+              <input type="number" class="form-control" id="regPastUnits" step="0.1" min="0" required autocomplete="off">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold" for="regPastBill">Bill Amount Paid (₹) *</label>
+              <input type="number" class="form-control" id="regPastBill" step="1" min="0" required autocomplete="off">
+            </div>
+          </div>
+
+          <div class="p-3 mt-3 border rounded bg-white">
+            <div class="d-flex justify-content-between align-items-center small">
+              <span class="text-muted">Calculated Gruha Jyothi Entitlement Limit (Baseline + 10%):</span>
+              <strong class="text-dark fs-6"><span id="lblEntitlementPreview">--</span> kWh</strong>
+            </div>
+            <div class="form-text small mb-0">Karnataka Scheme max ceiling is 200.0 kWh/month.</div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+            <h6 class="fw-bold mb-0 text-dark">4. Household Electricity Appliances Setup</h6>
+            <span class="badge-bw">Appliances</span>
+          </div>
+
+          <p class="small text-muted mb-3">
+            Enter the electrical appliances in your residence. The machine learning model uses this characteristic inventory to calibrate forecasting demand and detect threshold risks.
+          </p>
+
+          <div class="table-responsive mb-3 border rounded bg-white">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr class="small">
+                  <th>Appliance</th>
+                  <th>Category</th>
+                  <th style="width: 110px;">Wattage (W)</th>
+                  <th style="width: 85px;">Quantity</th>
+                  <th style="width: 105px;">Hours/Day</th>
+                  <th style="width: 95px;">Monthly kWh</th>
+                  <th style="width: 45px;"></th>
+                </tr>
+              </thead>
+              <tbody id="applianceTableBody">
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <button type="button" class="btn-minimal-outline py-1 px-3 small" id="btnAddApplianceBtn" onclick="addCustomApplianceRow()">
+              + Add Appliance
+            </button>
+          </div>
+
+          <div class="p-3 border rounded bg-white">
+            <div class="row g-2 text-center small">
+              <div class="col-4">
+                <span class="text-muted d-block">Appliance Count</span>
+                <strong class="fs-6 text-dark" id="lblTotalAppCount">0 Units</strong>
+              </div>
+              <div class="col-4">
+                <span class="text-muted d-block">Connected Load</span>
+                <strong class="fs-6 text-dark" id="lblTotalAppLoad">0.00 kW</strong>
+              </div>
+              <div class="col-4">
+                <span class="text-muted d-block">Monthly Appliance Demand</span>
+                <strong class="fs-6 text-dark" id="lblTotalAppKwh">0.0 kWh</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-minimal-primary w-100 py-2 mb-3" id="btnRegisterSubmit">
+          Complete Registration &amp; Setup Household
+        </button>
+
+        <div class="text-center small border-top pt-3">
+          <span class="text-muted">Already registered?</span>
+          <a href="login.html" class="fw-bold ms-1 text-dark">Sign In</a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <script src="../js/api/api-client.js"></script>
+  <script>
+    const pastUnitsInput = document.getElementById("regPastUnits");
+    pastUnitsInput.addEventListener("input", function() {
+      const val = parseFloat(pastUnitsInput.value);
+      if (!isNaN(val) && val >= 0) {
+        const entitled = Math.min(200.0, Math.round(val * 1.10 * 10.0) / 10.0);
+        document.getElementById("lblEntitlementPreview").innerText = entitled.toFixed(1);
+      } else {
+        document.getElementById("lblEntitlementPreview").innerText = "--";
+      }
+    });
+
+    let appliancesList = [
+      { name: "Refrigerator", category: "Cooling", wattage: 250, quantity: 1, dailyHours: 24.0 },
+      { name: "Ceiling Fans", category: "Cooling", wattage: 75, quantity: 3, dailyHours: 10.0 },
+      { name: "LED Lighting", category: "Lighting", wattage: 15, quantity: 8, dailyHours: 6.0 },
+      { name: "Television", category: "Entertainment", wattage: 100, quantity: 1, dailyHours: 4.0 },
+      { name: "Air Conditioner", category: "Cooling", wattage: 1500, quantity: 0, dailyHours: 4.0 },
+      { name: "Water Heater (Geyser)", category: "Heating", wattage: 1800, quantity: 0, dailyHours: 1.5 },
+      { name: "Washing Machine", category: "Motor", wattage: 500, quantity: 0, dailyHours: 1.0 }
+    ];
+
+    function renderAppliances() {
+      const tbody = document.getElementById("applianceTableBody");
+      tbody.innerHTML = "";
+
+      appliancesList.forEach((app, idx) => {
+        const kwh = Math.round(((app.wattage * app.quantity * app.dailyHours * 30.0) / 1000.0) * 10.0) / 10.0;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <input type="text" class="form-control form-control-sm app-name" value="${app.name}" data-idx="${idx}" autocomplete="off" required>
+          </td>
+          <td>
+            <select class="form-select form-select-sm app-cat" data-idx="${idx}" autocomplete="off">
+              <option value="Cooling" ${app.category === "Cooling" ? "selected" : ""}>Cooling</option>
+              <option value="Lighting" ${app.category === "Lighting" ? "selected" : ""}>Lighting</option>
+              <option value="Entertainment" ${app.category === "Entertainment" ? "selected" : ""}>Entertainment</option>
+              <option value="Heating" ${app.category === "Heating" ? "selected" : ""}>Heating</option>
+              <option value="Motor" ${app.category === "Motor" ? "selected" : ""}>Motor</option>
+              <option value="Kitchen" ${app.category === "Kitchen" ? "selected" : ""}>Kitchen</option>
+              <option value="General" ${app.category === "General" ? "selected" : ""}>General</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm app-watt" value="${app.wattage}" min="1" max="10000" data-idx="${idx}" autocomplete="off" required>
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm app-qty" value="${app.quantity}" min="0" max="50" data-idx="${idx}" autocomplete="off" required>
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm app-hours" value="${app.dailyHours}" step="0.5" min="0" max="24" data-idx="${idx}" autocomplete="off" required>
+          </td>
+          <td class="small fw-bold text-dark">
+            <span id="rowKwh_${idx}">${kwh.toFixed(1)}</span>
+          </td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-dark border-0 p-0 fs-6 text-muted" onclick="removeApplianceRow(${idx})">&times;</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      attachRowListeners();
+      updateApplianceTotals();
+    }
+
+    function attachRowListeners() {
+      document.querySelectorAll(".app-name").forEach(el => {
+        el.addEventListener("input", function() {
+          const idx = parseInt(this.getAttribute("data-idx"));
+          appliancesList[idx].name = this.value;
+        });
+      });
+      document.querySelectorAll(".app-cat").forEach(el => {
+        el.addEventListener("change", function() {
+          const idx = parseInt(this.getAttribute("data-idx"));
+          appliancesList[idx].category = this.value;
+        });
+      });
+      document.querySelectorAll(".app-watt, .app-qty, .app-hours").forEach(el => {
+        el.addEventListener("input", function() {
+          const idx = parseInt(this.getAttribute("data-idx"));
+          const row = this.closest("tr");
+          const watt = parseFloat(row.querySelector(".app-watt").value) || 0;
+          const qty = parseInt(row.querySelector(".app-qty").value) || 0;
+          const hrs = parseFloat(row.querySelector(".app-hours").value) || 0;
+
+          appliancesList[idx].wattage = watt;
+          appliancesList[idx].quantity = qty;
+          appliancesList[idx].dailyHours = hrs;
+
+          const rowKwh = Math.round(((watt * qty * hrs * 30.0) / 1000.0) * 10.0) / 10.0;
+          document.getElementById(`rowKwh_${idx}`).innerText = rowKwh.toFixed(1);
+          updateApplianceTotals();
+        });
+      });
+    }
+
+    function updateApplianceTotals() {
+      let totalQty = 0;
+      let totalWatts = 0;
+      let totalKwh = 0;
+
+      appliancesList.forEach(a => {
+        const qty = Number(a.quantity) || 0;
+        const watt = Number(a.wattage) || 0;
+        const hrs = Number(a.dailyHours) || 0;
+
+        totalQty += qty;
+        totalWatts += (watt * qty);
+        totalKwh += ((watt * qty * hrs * 30.0) / 1000.0);
+      });
+
+      document.getElementById("lblTotalAppCount").innerText = totalQty + " Units";
+      document.getElementById("lblTotalAppLoad").innerText = (totalWatts / 1000.0).toFixed(2) + " kW";
+      document.getElementById("lblTotalAppKwh").innerText = totalKwh.toFixed(1) + " kWh";
+    }
+
+    function addCustomApplianceRow() {
+      appliancesList.push({
+        name: "Custom Appliance",
+        category: "General",
+        wattage: 100,
+        quantity: 1,
+        dailyHours: 2.0
+      });
+      renderAppliances();
+    }
+
+    function removeApplianceRow(idx) {
+      if (appliancesList.length <= 1) {
+        appliancesList[0].quantity = 0;
+        renderAppliances();
+        return;
+      }
+      appliancesList.splice(idx, 1);
+      renderAppliances();
+    }
+
+    renderAppliances();
+
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const alertBox = document.getElementById("registerAlertMsg");
+      const btn = document.getElementById("btnRegisterSubmit");
+      alertBox.classList.add("d-none");
+
+      const fullName = document.getElementById("regFullName").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const phone = document.getElementById("regPhone").value.trim();
+      const password = document.getElementById("regPassword").value;
+
+      const consumerNumber = document.getElementById("regConsumerNo").value.trim();
+      const meterNumber = document.getElementById("regMeterNo").value.trim();
+      const district = document.getElementById("regDistrict").value;
+      const dwellingType = document.getElementById("regDwellingType").value;
+      const householdSize = parseInt(document.getElementById("regOccupants").value) || 4;
+      const sanctionedLoadKw = parseFloat(document.getElementById("regLoad").value) || 2.0;
+
+      const pastMonthName = document.getElementById("regPastMonth").value.trim();
+      const pastMonthUnitsKwh = parseFloat(document.getElementById("regPastUnits").value) || 0.0;
+      const pastMonthBillAmount = parseFloat(document.getElementById("regPastBill").value) || 0.0;
+
+      if (!district) {
+        alertBox.innerText = "Please select your district.";
+        alertBox.classList.remove("d-none");
+        return;
+      }
+
+      const activeAppliances = appliancesList
+        .filter(a => a.name && a.name.trim() !== "" && a.quantity > 0)
+        .map(a => ({
+          name: a.name.trim(),
+          category: a.category || "General",
+          wattage: parseInt(a.wattage) || 100,
+          quantity: parseInt(a.quantity) || 1,
+          dailyHours: parseFloat(a.dailyHours) || 2.0,
+          monthlyKwh: Math.round(((a.wattage * a.quantity * a.dailyHours * 30.0) / 1000.0) * 10.0) / 10.0
+        }));
+
+      btn.disabled = true;
+      btn.innerText = "Registering Household...";
+
+      try {
+        const regPayload = {
+          fullName,
+          email,
+          phone,
+          password,
+          consumerNumber,
+          meterNumber,
+          district,
+          dwellingType,
+          householdSize,
+          sanctionedLoadKw,
+          pastMonthName,
+          pastMonthUnitsKwh,
+          pastMonthBillAmount,
+          appliances: activeAppliances
+        };
+
+        await ApiClient.register(regPayload);
+        window.location.replace("login.html?registered=true");
+      } catch (err) {
+        alertBox.innerText = err.message || "Registration failed.";
+        alertBox.classList.remove("d-none");
+        btn.disabled = false;
+        btn.innerText = "Complete Registration & Setup Household";
+      }
+    });
+  </script>
+</body>
+</html>

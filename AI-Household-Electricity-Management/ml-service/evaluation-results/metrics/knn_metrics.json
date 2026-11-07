@@ -1,0 +1,16 @@
+{
+    "model_name": "KNN",
+    "train_metrics": {
+        "MAE": 16.7042,
+        "MSE": 890.2171,
+        "RMSE": 29.8365,
+        "R2": 0.8695
+    },
+    "test_metrics": {
+        "MAE": 26.4757,
+        "MSE": 4696.2459,
+        "RMSE": 68.5292,
+        "R2": 0.6059
+    },
+    "training_time_seconds": 0.0035851001739501953
+}
