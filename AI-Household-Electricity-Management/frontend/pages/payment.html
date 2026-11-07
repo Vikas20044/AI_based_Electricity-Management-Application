@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>Payment &amp; Clearance - Electricity Management</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Payment - Electricity Management</title>
   <link rel="stylesheet" href="../css/style.css">
   <script>
     (function() {
@@ -17,218 +14,149 @@
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="app-header-brand">
-        Electricity Management
-        <span class="badge-tag">AI System</span>
+  <!-- Simple Navigation Bar -->
+  <div class="nav-bar">
+    <div>
+      <b>Electricity Project</b> &nbsp;|&nbsp;
+      <a href="ai-forecast.html">Forecast</a>
+      <a href="gruha-jyothi.html">Gruha Jyothi</a>
+      <a href="payment.html" class="active">Pay Bill</a>
+      <a href="data-entry.html">Profile</a>
+    </div>
+    <div>
+      <span id="headerUserEmail" style="color: #555; font-size: 13px;"></span> &nbsp;|&nbsp;
+      <a href="javascript:void(0)" onclick="ApiClient.logout()">Logout</a>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom: 4px;">Electricity Bill Payment &amp; Receipt</h3>
+  <p style="font-size: 13px; color: #555; margin-top: 0; margin-bottom: 12px;">
+    View your active bill and make settlement.
+  </p>
+
+  <!-- 1. Current Bill Statement -->
+  <fieldset>
+    <legend>Active Bill Statement (<span id="billStatusTag">ASSESSED</span>)</legend>
+    <table class="plain-table">
+      <tr>
+        <td style="width: 30%;">Consumer Number:</td>
+        <td><b id="payConsumerNo">--</b></td>
+      </tr>
+      <tr>
+        <td>Meter Number:</td>
+        <td><span id="payMeterNo">--</span></td>
+      </tr>
+      <tr>
+        <td>Billing Cycle:</td>
+        <td><span id="payBillingMonth">Active Cycle</span></td>
+      </tr>
+      <tr>
+        <td>Projected Units:</td>
+        <td><b id="payUnits" style="color: #003399;">-- kWh</b></td>
+      </tr>
+      <tr>
+        <td>Gross Bill:</td>
+        <td>₹<span id="payGross">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Govt Subsidy:</td>
+        <td style="color: green;">-₹<span id="paySubsidy">0.00</span></td>
+      </tr>
+      <tr style="background: #f0f0f0; font-size: 15px;">
+        <td><b>Net Amount to Pay:</b></td>
+        <td><b>₹<span id="payNet" style="color: #003399;">0.00</span></b></td>
+      </tr>
+    </table>
+    <div style="font-size: 12px; color: #555; margin-top: 6px;" id="payGuidanceBox">
+      <span id="payGuidanceText">Evaluating scheme status...</span>
+    </div>
+  </fieldset>
+
+  <!-- 2. Payment Action -->
+  <fieldset>
+    <legend>Pay Bill / Get Receipt</legend>
+
+    <form id="paymentActionForm" autocomplete="off">
+      <!-- Zero Bill Option -->
+      <div id="zeroBillOptionBox" class="d-none">
+        <p style="color: green; font-weight: bold; font-size: 13px;">
+          Your bill is ₹0 under Gruha Jyothi! No payment needed.
+        </p>
+        <button type="button" id="btnIssueZeroBill" style="padding: 6px 12px; font-weight: bold;">
+          Download Zero-Bill Receipt
+        </button>
       </div>
-      <div class="d-flex align-items-center gap-3">
-        <span class="small text-muted" id="headerUserEmail">Loading...</span>
-        <button class="btn-signout" onclick="ApiClient.logout()">Sign Out</button>
+
+      <!-- Payable Option -->
+      <div id="payableOptionBox" class="d-none">
+        <p style="font-size: 13px; margin-bottom: 6px;">
+          <b>Select Mode:</b> &nbsp;
+          <label><input type="radio" name="payMethod" id="methodUpi" value="UPI" checked> UPI</label> &nbsp;
+          <label><input type="radio" name="payMethod" id="methodCard" value="CARD"> Card</label> &nbsp;
+          <label><input type="radio" name="payMethod" id="methodNet" value="NET_BANKING"> Net Banking</label>
+        </p>
+
+        <p style="font-size: 13px;">
+          <label for="payPayerName"><b>Payer Name:</b></label><br>
+          <input type="text" id="payPayerName" required style="width: 250px;">
+        </p>
+
+        <button type="submit" id="btnPayNow" style="padding: 6px 14px; font-weight: bold;">
+          Pay ₹<span id="btnPayAmount">0.00</span> Now
+        </button>
+      </div>
+    </form>
+
+    <div id="processingIndicator" class="d-none" style="font-size: 13px; color: #666; padding: 10px;">
+      Processing payment...
+    </div>
+  </fieldset>
+
+  <!-- Printable Receipt Box -->
+  <div id="receiptSection" class="d-none" style="margin-top: 15px;">
+    <div style="border: 2px dashed #666; padding: 12px; max-width: 450px; margin: 0 auto; font-size: 13px;">
+      <h4 style="text-align: center; margin: 0 0 4px 0; color: #003399;">Electricity Bill Receipt</h4>
+      <div style="text-align: center; font-size: 11px; color: #666; margin-bottom: 8px;">Government of Karnataka</div>
+      <hr>
+      <table style="width: 100%; border: none;">
+        <tr><td>Transaction ID:</td><td><b id="recTxnRef">TXN-000000</b></td></tr>
+        <tr><td>Consumer No:</td><td><span id="recConsumerNo">--</span></td></tr>
+        <tr><td>Billing Month:</td><td><span id="recMonth">--</span></td></tr>
+        <tr><td>Mode:</td><td><span id="recMethod">UPI</span></td></tr>
+        <tr><td>Date:</td><td><span id="recDate">--</span></td></tr>
+        <tr style="border-top: 1px solid #999; font-size: 14px;">
+          <td><b>Amount Paid:</b></td>
+          <td><b>₹<span id="recAmount">0.00</span></b></td>
+        </tr>
+      </table>
+      <div style="margin-top: 8px; text-align: center; font-size: 11px; color: #666;" id="recNote">
+        Clearance verified.
+      </div>
+      <div style="text-align: center; margin-top: 10px;">
+        <button type="button" onclick="window.print()">Print Receipt</button>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="main-wrapper">
-
-    <div class="page-title-box">
-      <h2>Electricity Bill Payment &amp; Clearance</h2>
-      <p>Settle outstanding electricity dues or generate official Zero-Bill welfare clearance certificates.</p>
-    </div>
-
-    <div class="row g-4 mb-4">
-
-      <div class="col-lg-6">
-        <div class="minimal-card h-100">
-          <div class="minimal-card-header">
-            <h6>Current Bill Statement</h6>
-            <span class="badge-bw" id="billStatusTag">ASSESSED</span>
-          </div>
-
-          <div class="mb-3">
-            <div class="d-flex justify-content-between py-1 border-bottom small">
-              <span class="text-muted">Consumer Account Number:</span>
-              <strong class="text-dark" id="payConsumerNo">--</strong>
-            </div>
-            <div class="d-flex justify-content-between py-1 border-bottom small">
-              <span class="text-muted">Meter Identifier:</span>
-              <span class="text-dark" id="payMeterNo">--</span>
-            </div>
-            <div class="d-flex justify-content-between py-1 border-bottom small">
-              <span class="text-muted">Billing Cycle:</span>
-              <span class="text-dark" id="payBillingMonth">Active Cycle</span>
-            </div>
-            <div class="d-flex justify-content-between py-1 border-bottom small">
-              <span class="text-muted">Projected Energy Consumption:</span>
-              <strong class="text-dark" id="payUnits">-- kWh</strong>
-            </div>
-            <div class="d-flex justify-content-between py-1 border-bottom small">
-              <span class="text-muted">Gross Commercial Tariff (KERC):</span>
-              <span class="text-dark">₹<span id="payGross">0.00</span></span>
-            </div>
-            <div class="d-flex justify-content-between py-1 border-bottom small">
-              <span class="text-muted">Gruha Jyothi Subsidy Deduction:</span>
-              <span class="text-dark">-₹<span id="paySubsidy">0.00</span></span>
-            </div>
-            <div class="d-flex justify-content-between py-2 border-bottom fw-bold fs-5">
-              <span>Net Amount Payable:</span>
-              <span>₹<span id="payNet">0.00</span></span>
-            </div>
-          </div>
-
-          <div class="p-3 border rounded bg-light" id="payGuidanceBox">
-            <span class="small text-muted d-block" id="payGuidanceText">
-              Evaluating scheme status...
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-6">
-        <div class="minimal-card h-100">
-          <div class="minimal-card-header">
-            <h6>Process Settlement</h6>
-            <span class="badge-bw-solid">Instant Gateway</span>
-          </div>
-
-          <form id="paymentActionForm" autocomplete="off">
-            <div id="zeroBillOptionBox" class="mb-3 d-none">
-              <div class="alert-minimal mb-3">
-                <strong>100% Zero-Bill Beneficiary:</strong> Your monthly energy usage is completely subsidized under the Gruha Jyothi Scheme. No payment is required. Click below to issue an official clearance voucher.
-              </div>
-              <button type="button" class="btn-minimal-primary w-100 py-2" id="btnIssueZeroBill">
-                Generate Zero-Bill Clearance Voucher
-              </button>
-            </div>
-
-            <div id="payableOptionBox" class="mb-3 d-none">
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Select Payment Method</label>
-                <div class="d-flex flex-column gap-2 mt-1">
-                  <div class="form-check p-2 border rounded">
-                    <input class="form-check-input ms-1 me-2" type="radio" name="payMethod" id="methodUpi" value="UPI" checked>
-                    <label class="form-check-label fw-semibold small" for="methodUpi">
-                      UPI (Google Pay / PhonePe / Paytm / BHIM)
-                    </label>
-                  </div>
-                  <div class="form-check p-2 border rounded">
-                    <input class="form-check-input ms-1 me-2" type="radio" name="payMethod" id="methodCard" value="CARD">
-                    <label class="form-check-label fw-semibold small" for="methodCard">
-                      Debit / Credit Card (Visa, RuPay, MasterCard)
-                    </label>
-                  </div>
-                  <div class="form-check p-2 border rounded">
-                    <input class="form-check-input ms-1 me-2" type="radio" name="payMethod" id="methodNet" value="NET_BANKING">
-                    <label class="form-check-label fw-semibold small" for="methodNet">
-                      Net Banking (All Indian Scheduled Banks)
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label small fw-semibold" for="payPayerName">Payer Name</label>
-                <input type="text" class="form-control" id="payPayerName" required autocomplete="off">
-              </div>
-
-              <button type="submit" class="btn-minimal-primary w-100 py-2" id="btnPayNow">
-                Pay Bill (₹<span id="btnPayAmount">0.00</span>)
-              </button>
-            </div>
-          </form>
-
-          <div id="processingIndicator" class="text-center py-4 d-none">
-            <div class="spinner-border text-dark mb-2" role="status"></div>
-            <p class="small text-muted mb-0">Processing secure transaction with utility dispatch...</p>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div id="receiptSection" class="d-none mb-4">
-      <div class="receipt-box">
-        <div class="text-center pb-3 border-bottom mb-3">
-          <h5 class="fw-bold text-uppercase tracking-tight mb-1">Government of Karnataka</h5>
-          <div class="small text-muted">Electricity Supply Company Statement &amp; Clearance Receipt</div>
-          <span class="badge-bw-solid mt-2">TRANSACTION SUCCESSFUL</span>
-        </div>
-
-        <div class="receipt-row">
-          <span class="text-muted">Transaction Reference:</span>
-          <strong id="recTxnRef">TXN-KAR-000000</strong>
-        </div>
-        <div class="receipt-row">
-          <span class="text-muted">Consumer Number:</span>
-          <span id="recConsumerNo">--</span>
-        </div>
-        <div class="receipt-row">
-          <span class="text-muted">Billing Cycle:</span>
-          <span id="recMonth">Active Cycle</span>
-        </div>
-        <div class="receipt-row">
-          <span class="text-muted">Payment Channel:</span>
-          <span id="recMethod">UPI</span>
-        </div>
-        <div class="receipt-row">
-          <span class="text-muted">Date &amp; Time:</span>
-          <span id="recDate">--</span>
-        </div>
-        <div class="receipt-row total">
-          <span>Amount Settled:</span>
-          <span>₹<span id="recAmount">0.00</span></span>
-        </div>
-
-        <div class="mt-3 p-2 bg-light border small text-center text-muted" id="recNote">
-          Clearance verified. Your household electricity account is fully up-to-date.
-        </div>
-
-        <div class="text-center mt-3 pt-2">
-          <button type="button" class="btn-minimal-outline btn-sm" onclick="window.print()">
-            Print / Save Receipt
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="minimal-card mb-4">
-      <div class="minimal-card-header">
-        <h6>Recorded Transaction History</h6>
-        <span class="badge-bw-gray">Ledger</span>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table-minimal">
-          <thead>
-            <tr>
-              <th>Billing Month</th>
-              <th>Reference ID</th>
-              <th>Amount (₹)</th>
-              <th>Channel</th>
-              <th>Status</th>
-              <th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody id="paymentHistoryBody">
-            <tr>
-              <td colspan="6" class="text-center text-muted py-3">Loading transaction records...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 border rounded bg-white">
-      <a href="gruha-jyothi.html" class="btn-minimal-outline">
-        &larr; Back to Gruha Jyothi Assessment
-      </a>
-      <a href="ai-forecast.html" class="btn-minimal-outline">
-        &larr; Back to AI Forecast
-      </a>
-    </div>
-
-  </main>
+  <!-- 3. Payment History Table -->
+  <fieldset style="margin-top: 15px;">
+    <legend>Payment History</legend>
+    <table class="plain-table">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Reference ID</th>
+          <th>Amount</th>
+          <th>Mode</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="paymentHistoryBody">
+        <tr><td colspan="6" style="text-align: center; color: #666;">Loading...</td></tr>
+      </tbody>
+    </table>
+  </fieldset>
 
   <script src="../js/api/api-client.js"></script>
   <script>
@@ -270,14 +198,14 @@
       if (net <= 0.0) {
         zeroBox.classList.remove("d-none");
         payBox.classList.add("d-none");
-        statusTag.innerText = "ZERO-BILL ELIGIBLE";
-        guidanceBox.innerHTML = `<strong>100% Free Electricity:</strong> Your projected consumption (${units.toFixed(1)} kWh) qualifies for complete tariff clearance under Gruha Jyothi. Click above to issue a formal clearance certificate.`;
+        statusTag.innerText = "ZERO-BILL";
+        guidanceBox.innerHTML = `<b>Free Electricity:</b> Consumption (${units.toFixed(1)} kWh) qualifies for 100% waiver under Gruha Jyothi.`;
       } else {
         zeroBox.classList.add("d-none");
         payBox.classList.remove("d-none");
         document.getElementById("btnPayAmount").innerText = net.toFixed(2);
         statusTag.innerText = "DUE: ₹" + net.toFixed(2);
-        guidanceBox.innerHTML = `<strong>Excess / Commercial Dues:</strong> Projected consumption (${units.toFixed(1)} kWh) exceeds entitlement limit or state ceiling. Net payable: ₹${net.toFixed(2)}.`;
+        guidanceBox.innerHTML = `<b>Dues:</b> Net payable for this cycle is ₹${net.toFixed(2)}.`;
       }
 
       loadHistory();
@@ -289,22 +217,22 @@
       tbody.innerHTML = "";
 
       if (!history || history.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">No payments recorded yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666; padding: 8px;">No payments recorded yet.</td></tr>`;
         return;
       }
 
       history.forEach(item => {
         const tr = document.createElement("tr");
-        const dateStr = item.paymentDate ? new Date(item.paymentDate).toLocaleString() : "--";
+        const dateStr = item.paymentDate ? new Date(item.paymentDate).toLocaleDateString() : "--";
         const isZero = Number(item.amountInr) === 0;
 
         tr.innerHTML = `
-          <td><strong>${item.billingMonth || "--"}</strong></td>
-          <td><code class="text-dark">${item.transactionReference || "--"}</code></td>
+          <td><b>${item.billingMonth || "--"}</b></td>
+          <td><code>${item.transactionReference || "--"}</code></td>
           <td>${isZero ? "₹0.00 (Zero-Bill)" : "₹" + Number(item.amountInr).toFixed(2)}</td>
-          <td><span class="badge-bw">${item.paymentMethod || "UPI"}</span></td>
-          <td><span class="badge-bw-solid">${item.paymentStatus || "SUCCESS"}</span></td>
-          <td class="small text-muted">${dateStr}</td>
+          <td>${item.paymentMethod || "UPI"}</td>
+          <td style="color: green;"><b>${item.paymentStatus || "SUCCESS"}</b></td>
+          <td style="color: #666;">${dateStr}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -313,7 +241,7 @@
     document.getElementById("btnIssueZeroBill").addEventListener("click", async function() {
       const btn = this;
       btn.disabled = true;
-      btn.innerText = "Generating Clearance Certificate...";
+      btn.innerText = "Generating...";
 
       try {
         const payload = {
@@ -326,10 +254,10 @@
         showReceipt(receipt);
         await loadHistory();
       } catch (e) {
-        alert("Error issuing clearance voucher: " + e.message);
+        alert("Error: " + e.message);
       } finally {
         btn.disabled = false;
-        btn.innerText = "Generate Zero-Bill Clearance Voucher";
+        btn.innerText = "Download Zero-Bill Receipt";
       }
     });
 
@@ -354,7 +282,7 @@
         showReceipt(receipt);
         await loadHistory();
       } catch (err) {
-        alert("Payment processing error: " + err.message);
+        alert("Payment error: " + err.message);
         form.classList.remove("d-none");
       } finally {
         indicator.classList.add("d-none");

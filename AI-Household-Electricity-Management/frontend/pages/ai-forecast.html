@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>AI Electricity Forecast &amp; Mid-Month Analysis - Electricity Management</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Forecast - Electricity Management</title>
   <link rel="stylesheet" href="../css/style.css">
   <script>
     (function() {
@@ -17,273 +14,161 @@
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="app-header-brand">
-        Electricity Management
-        <span class="badge-tag">AI System</span>
-      </div>
-      <div class="d-flex align-items-center gap-3">
-        <span class="small text-muted" id="headerUserEmail">Loading...</span>
-        <button class="btn-signout" onclick="ApiClient.logout()">Sign Out</button>
-      </div>
+  <!-- Simple Navigation Bar -->
+  <div class="nav-bar">
+    <div>
+      <b>Electricity Project</b> &nbsp;|&nbsp;
+      <a href="ai-forecast.html" class="active">Forecast</a>
+      <a href="gruha-jyothi.html">Gruha Jyothi</a>
+      <a href="payment.html">Pay Bill</a>
+      <a href="data-entry.html">Profile</a>
     </div>
-  </header>
-
-  <main class="main-wrapper">
-
-    <div class="page-title-box d-flex justify-content-between align-items-end flex-wrap gap-2">
-      <div>
-        <h2>AI Electricity Forecasting &amp; Mid-Month Tracking</h2>
-        <p>Real-time machine learning projection, budget threshold warning &amp; burn-rate pacing for your active cycle.</p>
-      </div>
-      <div>
-        <span class="badge-bw-solid" id="badgeModelName">ML Microservice (Port 8000)</span>
-      </div>
+    <div>
+      <span id="headerUserEmail" style="color: #555; font-size: 13px;"></span> &nbsp;|&nbsp;
+      <a href="javascript:void(0)" onclick="ApiClient.logout()">Logout</a>
     </div>
+  </div>
 
-    <div class="minimal-card mb-4" style="border: 2px solid #111111;">
-      <div class="minimal-card-header">
-        <h5 class="fw-bold mb-0">Mid-Month Consumption Tracking</h5>
-        <span class="badge-bw">Interactive Feature</span>
-      </div>
+  <h3 style="margin-bottom: 4px;">Electricity Consumption Forecast</h3>
+  <p style="font-size: 13px; color: #555; margin-top: 0; margin-bottom: 12px;">
+    Enter your current meter reading to calculate projected consumption.
+    <span id="badgeModelName" style="float: right; font-size: 11px; color: #777;">ML Model</span>
+  </p>
 
-      <p class="text-muted small mb-3">
-        Enter your mid-cycle partial meter reading and days elapsed to simulate your end-of-month trajectory, evaluate subsidy risk, and calibrate daily pacing.
-      </p>
-
-      <form id="midMonthForm" autocomplete="off" class="mb-3">
-        <div class="row g-3 align-items-end">
-          <div class="col-sm-5">
-            <label class="form-label small fw-semibold" for="inputPartialKwh">Current Meter Reading (kWh consumed so far)</label>
-            <input type="number" class="form-control" id="inputPartialKwh" step="0.1" min="0" max="1000" autocomplete="off" required>
-          </div>
-
-          <div class="col-sm-4">
-            <label class="form-label small fw-semibold" for="inputDaysElapsed">Days Elapsed in Active Billing Month</label>
-            <input type="number" class="form-control" id="inputDaysElapsed" min="1" max="31" autocomplete="off" required>
-          </div>
-
-          <div class="col-sm-3">
-            <button type="submit" class="btn-minimal-primary w-100 py-2" id="btnUpdateMidMonth">
-              Update Forecast
-            </button>
-          </div>
-        </div>
-      </form>
-
-      <div class="p-3 border rounded bg-white mt-3">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-          <span class="small text-muted text-uppercase fw-semibold">Pace Trajectory Assessment:</span>
-          <span class="badge-bw-solid" id="midMonthStatusBadge">ON TRACK</span>
-        </div>
-        <p class="small text-dark mb-3" id="midMonthAdvisory">
-          Calculating mid-month trajectory...
-        </p>
-
-        <div class="row g-2 text-center border-top pt-2">
-          <div class="col-sm-4">
-            <div class="small text-muted">Daily Burn Rate</div>
-            <div class="fw-bold text-dark fs-6"><span id="metricDailyBurn">--</span> kWh/day</div>
-          </div>
-          <div class="col-sm-4">
-            <div class="small text-muted">Est. Remaining Usage</div>
-            <div class="fw-bold text-dark fs-6"><span id="metricRemaining">--</span> kWh</div>
-          </div>
-          <div class="col-sm-4">
-            <div class="small text-muted">Safety Margin to 200 Limit</div>
-            <div class="fw-bold text-dark fs-6"><span id="metricSafetyMargin">--</span> kWh</div>
-          </div>
-        </div>
-      </div>
+  <!-- 1. Reading Input -->
+  <fieldset>
+    <legend>Enter Current Meter Reading</legend>
+    <form id="midMonthForm" autocomplete="off">
+      <table style="width: 100%; border: none;">
+        <tr>
+          <td style="width: 45%;">
+            <label for="inputPartialKwh">Units Used So Far (kWh):</label><br>
+            <input type="number" id="inputPartialKwh" step="0.1" min="0" max="1000" placeholder="e.g. 75" required style="width: 90%;">
+          </td>
+          <td style="width: 40%;">
+            <label for="inputDaysElapsed">Days Elapsed (1-31):</label><br>
+            <input type="number" id="inputDaysElapsed" min="1" max="31" placeholder="e.g. 15" required style="width: 90%;">
+          </td>
+          <td style="width: 15%; vertical-align: bottom;">
+            <button type="submit" id="btnUpdateMidMonth" style="padding: 5px 12px; font-weight: bold;">Update</button>
+          </td>
+        </tr>
+      </table>
+    </form>
+    <div style="margin-top: 8px; font-size: 12px; background: #fafafa; padding: 6px; border: 1px solid #ddd;">
+      Status: <b id="midMonthStatusBadge">ON TRACK</b> &nbsp;|&nbsp;
+      Daily: <b id="metricDailyBurn">--</b> kWh/day &nbsp;|&nbsp;
+      Remaining: <b id="metricRemaining">--</b> kWh &nbsp;|&nbsp;
+      Margin to 200: <b id="metricSafetyMargin">--</b> kWh
+      <div id="midMonthAdvisory" style="color: #666; margin-top: 3px;">Calculating...</div>
     </div>
+  </fieldset>
 
-    <div class="row g-3 mb-4">
-      <div class="col-sm-6 col-lg-3">
-        <div class="stat-box">
-          <div class="stat-label">AI Predicted Usage</div>
-          <div class="stat-value"><span id="forecastUnits">--</span> <span class="stat-unit">kWh</span></div>
-          <p class="stat-subtext">End-of-month projected demand</p>
-        </div>
-      </div>
+  <!-- 2. Prediction Results (Simple Table) -->
+  <fieldset>
+    <legend>Forecast Results</legend>
+    <table class="plain-table">
+      <tr>
+        <th style="width: 25%;">Predicted Units</th>
+        <th style="width: 25%;">Daily Average</th>
+        <th style="width: 25%;">Estimated Bill</th>
+        <th style="width: 25%;">Margin to 200</th>
+      </tr>
+      <tr style="text-align: center; font-size: 16px;">
+        <td><b id="forecastUnits" style="color: #003399;">--</b> <span style="font-size: 12px;">kWh</span></td>
+        <td><b id="forecastDailyRate">--</b> <span style="font-size: 12px;">kWh/d</span></td>
+        <td>₹<b id="forecastGrossBill" style="color: #003399;">--</b></td>
+        <td><b id="forecastMargin">--</b> <span style="font-size: 12px;">kWh</span></td>
+      </tr>
+      <tr style="font-size: 11px; color: #555;">
+        <td style="text-align: center;">End of month</td>
+        <td style="text-align: center;">Burn rate</td>
+        <td style="text-align: center;">Commercial bill</td>
+        <td style="text-align: center;" id="forecastMarginText">Under ceiling</td>
+      </tr>
+    </table>
+  </fieldset>
 
-      <div class="col-sm-6 col-lg-3">
-        <div class="stat-box">
-          <div class="stat-label">Daily Burn Rate</div>
-          <div class="stat-value"><span id="forecastDailyRate">--</span> <span class="stat-unit">kWh/day</span></div>
-          <p class="stat-subtext">Continuous consumption pace</p>
-        </div>
-      </div>
-
-      <div class="col-sm-6 col-lg-3">
-        <div class="stat-box">
-          <div class="stat-label">Gross Tariff Bill</div>
-          <div class="stat-value">₹<span id="forecastGrossBill">--</span></div>
-          <p class="stat-subtext">KERC pre-subsidy commercial tariff</p>
-        </div>
-      </div>
-
-      <div class="col-sm-6 col-lg-3">
-        <div class="stat-box">
-          <div class="stat-label">Ceiling Safety Margin</div>
-          <div class="stat-value"><span id="forecastMargin">--</span> <span class="stat-unit">kWh</span></div>
-          <p class="stat-subtext" id="forecastMarginText">Under 200 kWh ceiling</p>
-        </div>
-      </div>
+  <!-- 3. 200 Units Subsidy Limit Progress Bar -->
+  <fieldset>
+    <legend>Karnataka 200 Units Ceiling Tracker</legend>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 2px;">
+      <span>Entitlement: <b id="lblEntitlement">-- kWh</b></span>
+      <span>Status: <b id="meterCeilingStatus">CHECKING</b></span>
+      <span>State Cap: <b>200.0 kWh</b></span>
     </div>
 
-    <div class="minimal-card mb-4" style="border: 2px solid #111111;">
-      <div class="minimal-card-header">
-        <h6 class="fw-bold mb-0">Monthly Electricity Bill Budget Threshold Tracker</h6>
-        <span class="badge-bw-solid" id="badgeBudgetStatus">WITHIN BUDGET</span>
-      </div>
-
-      <p class="text-muted small mb-3">
-        Set your monthly electricity spending limit (budget). The AI model evaluates your projected end-of-month electricity bill against this threshold and issues real-time warnings if you are approaching or crossing it.
-      </p>
-
-      <form id="budgetThresholdForm" autocomplete="off" class="mb-3">
-        <div class="row g-3 align-items-end">
-          <div class="col-sm-5">
-            <label class="form-label small fw-semibold" for="inputBudgetInr">Monthly Electricity Budget Limit (₹)</label>
-            <input type="number" class="form-control fw-bold" id="inputBudgetInr" step="50" min="100" max="50000" autocomplete="off" required>
-          </div>
-          <div class="col-sm-4 d-flex gap-2">
-            <button type="button" class="btn-minimal-outline py-2 px-3 small w-100" onclick="setPresetBudget(1500)">₹1500</button>
-            <button type="button" class="btn-minimal-outline py-2 px-3 small w-100" onclick="setPresetBudget(2500)">₹2500</button>
-            <button type="button" class="btn-minimal-outline py-2 px-3 small w-100" onclick="setPresetBudget(3500)">₹3500</button>
-          </div>
-          <div class="col-sm-3">
-            <button type="submit" class="btn-minimal-primary w-100 py-2" id="btnUpdateBudget">
-              Apply Budget Threshold
-            </button>
-          </div>
-        </div>
-      </form>
-
-      <div class="mb-3">
-        <div class="d-flex justify-content-between small text-muted mb-1">
-          <span>₹0.00 (Base)</span>
-          <span>Projected Bill: <strong class="text-dark">₹<span id="lblBudgetProjectedBill">0.00</span></strong></span>
-          <span>Budget Threshold: <strong class="text-dark">₹<span id="lblBudgetThresholdLimit">2500.00</span></strong></span>
-        </div>
-
-        <div class="minimal-meter-track">
-          <div class="minimal-meter-fill" id="meterBudgetFill" style="width: 0%;"></div>
-        </div>
-
-        <div class="d-flex justify-content-between small text-muted mt-1">
-          <span id="lblBudgetRemainingBuffer">Remaining Buffer: ₹0.00</span>
-          <span id="lblBudgetPercent">0% of Budget Utilized</span>
-        </div>
-      </div>
-
-      <div class="p-3 border rounded bg-white" id="budgetWarningBox">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
-          <span class="small text-muted text-uppercase fw-semibold">Model Forecast Assessment:</span>
-          <span class="badge-bw" id="lblBudgetWarningBadge">EVALUATING</span>
-        </div>
-        <p class="small text-dark mb-0" id="lblBudgetWarningText">
-          Evaluating projected electricity bill against your monthly budget...
-        </p>
-      </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="forecastMeterFill"></div>
     </div>
 
-    <div class="minimal-card mb-4">
-      <div class="minimal-card-header">
-        <h6>Current Forecast vs. Karnataka 200 kWh Ceiling Tracker</h6>
-        <span class="badge-bw" id="meterCeilingStatus">EVALUATING</span>
-      </div>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #555;">
+      <span>Projected: <b id="lblProjected">-- kWh</b></span>
+      <span id="lblPercent">0% of 200 units</span>
+    </div>
+  </fieldset>
 
-      <div class="mb-2">
-        <div class="d-flex justify-content-between small text-muted mb-1">
-          <span>0 kWh (Base)</span>
-          <span>Entitlement Limit: <strong class="text-dark" id="lblEntitlement">-- kWh</strong></span>
-          <span>State Ceiling: <strong class="text-dark">200.0 kWh</strong></span>
-        </div>
+  <!-- 4. Monthly Budget Tracker -->
+  <fieldset>
+    <legend>Monthly Bill Budget Tracker</legend>
+    <form id="budgetThresholdForm" autocomplete="off" style="margin-bottom: 6px;">
+      <label for="inputBudgetInr" style="font-size: 12px;">Monthly Budget Limit (₹):</label>
+      <input type="number" id="inputBudgetInr" value="2500" step="50" style="width: 100px;">
+      <button type="button" onclick="setPresetBudget(1500)">₹1500</button>
+      <button type="button" onclick="setPresetBudget(2500)">₹2500</button>
+      <button type="button" onclick="setPresetBudget(3500)">₹3500</button>
+      <button type="submit" id="btnUpdateBudget">Save Budget</button>
+    </form>
 
-        <div class="minimal-meter-track">
-          <div class="minimal-meter-fill" id="forecastMeterFill" style="width: 0%;"></div>
-        </div>
-
-        <div class="d-flex justify-content-between small text-muted mt-1">
-          <span>Projected: <strong class="text-dark" id="lblProjected">-- kWh</strong></span>
-          <span id="lblPercent">0% of 200-Unit Ceiling</span>
-        </div>
-      </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="meterBudgetFill"></div>
     </div>
 
-    <div class="minimal-card mb-4">
-      <div class="minimal-card-header">
-        <h6>Registered Household Parameters</h6>
-        <span class="badge-bw-gray">Profile Data</span>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table-minimal">
-          <thead>
-            <tr>
-              <th>Parameter</th>
-              <th>Registered Value</th>
-              <th>Relevance to Model</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Consumer Account ID</strong></td>
-              <td id="featConsumerNo">--</td>
-              <td>Identifier for tariff jurisdiction &amp; meter ledger</td>
-            </tr>
-            <tr>
-              <td><strong>District &amp; Location</strong></td>
-              <td id="featDistrict">--</td>
-              <td>Climatic normal matching &amp; weather proxy</td>
-            </tr>
-            <tr>
-              <td><strong>Historical Baseline Usage</strong></td>
-              <td id="featPastUnits">-- kWh</td>
-              <td>Baseline weight ($t-1$) for recurrent demand</td>
-            </tr>
-            <tr>
-              <td><strong>Household Occupants</strong></td>
-              <td id="featOccupants">-- Members</td>
-              <td>Per-capita electrical workload estimation</td>
-            </tr>
-            <tr>
-              <td><strong>Sanctioned Load</strong></td>
-              <td id="featLoad">-- kW</td>
-              <td>Base utility fixed charges (₹70.0/kW)</td>
-            </tr>
-            <tr>
-              <td><strong>Appliance Inventory</strong></td>
-              <td id="featAppCount">-- Units</td>
-              <td>Connected electricity appliance devices</td>
-            </tr>
-            <tr>
-              <td><strong>Connected Appliance Load</strong></td>
-              <td id="featAppLoad">-- kW</td>
-              <td>Bottom-up electrical capacity feature for ML</td>
-            </tr>
-            <tr>
-              <td><strong>Appliance Monthly Demand</strong></td>
-              <td id="featAppKwh">-- kWh</td>
-              <td>Engineering bottom-up characteristic prior</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div style="display: flex; justify-content: space-between; font-size: 12px;">
+      <span>Bill: ₹<b id="lblBudgetProjectedBill">0.00</b> / Limit: ₹<b id="lblBudgetThresholdLimit">2500.00</b></span>
+      <span id="lblBudgetPercent">0% used</span>
+      <span id="lblBudgetRemainingBuffer">Buffer: ₹0.00</span>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 border rounded bg-white">
-      <a href="data-entry.html" class="small text-muted">
-        &larr; Edit Household Connection Details
-      </a>
-      <a href="gruha-jyothi.html" class="btn-minimal-primary">
-        Proceed to Gruha Jyothi Assessment &rarr;
-      </a>
+    <div style="font-size: 12px; background: #fafafa; border: 1px solid #ddd; padding: 4px 8px; margin-top: 6px;" id="budgetWarningBox">
+      Status: <b id="badgeBudgetStatus">WITHIN BUDGET</b> (<span id="lblBudgetWarningBadge">SAFE</span>) -
+      <span id="lblBudgetWarningText" style="color: #555;">Checking budget...</span>
     </div>
+  </fieldset>
 
-  </main>
+  <!-- 5. Household Summary Table -->
+  <fieldset>
+    <legend>Household Details (<a href="data-entry.html" style="font-size: 11px;">Edit</a>)</legend>
+    <table class="plain-table">
+      <tr>
+        <td>Consumer No:</td>
+        <td><b id="featConsumerNo">--</b></td>
+        <td>District:</td>
+        <td><b id="featDistrict">--</b></td>
+      </tr>
+      <tr>
+        <td>Members:</td>
+        <td><span id="featOccupants">--</span></td>
+        <td>Load:</td>
+        <td><span id="featLoad">--</span></td>
+      </tr>
+      <tr>
+        <td>Last Month:</td>
+        <td><span id="featPastUnits">--</span></td>
+        <td>Appliances:</td>
+        <td><span id="featAppCount">--</span> (<span id="featAppLoad">--</span>)</td>
+      </tr>
+      <tr style="display: none;">
+        <td colspan="4" id="featAppKwh">--</td>
+      </tr>
+    </table>
+  </fieldset>
+
+  <p style="text-align: right; margin-top: 15px;">
+    <a href="gruha-jyothi.html" style="font-weight: bold; color: #003399;">
+      Next: Check Gruha Jyothi Scheme &rarr;
+    </a>
+  </p>
 
   <script src="../js/api/api-client.js"></script>
   <script>
@@ -305,7 +190,7 @@
         const profile = await ApiClient.getHouseholdProfile();
         if (profile) {
           document.getElementById("featConsumerNo").innerText = profile.consumerNumber || "KAR-TMK-90214";
-          document.getElementById("featDistrict").innerText = (profile.district || "Tumakuru") + ", Karnataka";
+          document.getElementById("featDistrict").innerText = profile.district || "Tumakuru";
           document.getElementById("featPastUnits").innerText = (profile.pastMonthUnitsKwh || 160.0) + " kWh";
           document.getElementById("featOccupants").innerText = (profile.householdSize || 4) + " Members";
           document.getElementById("featLoad").innerText = (profile.sanctionedLoadKw || 2.0) + " kW";
@@ -332,7 +217,7 @@
 
         currentForecastData = data;
 
-        document.getElementById("badgeModelName").innerText = data.modelAlgorithm || "Linear Regression (Port 8000)";
+        document.getElementById("badgeModelName").innerText = data.modelAlgorithm || "Long Short-Term Memory (LSTM)";
         document.getElementById("forecastUnits").innerText = data.predictedKwh.toFixed(1);
         document.getElementById("forecastDailyRate").innerText = data.dailyRunRateKwh.toFixed(2);
         document.getElementById("forecastGrossBill").innerText = data.grossBillInr.toFixed(2);
@@ -343,19 +228,25 @@
 
         const margin = data.ceilingMarginKwh;
         document.getElementById("forecastMargin").innerText = Math.abs(margin).toFixed(1);
+        const ceilingBadge = document.getElementById("meterCeilingStatus");
         if (margin >= 0) {
-          document.getElementById("forecastMarginText").innerText = "Under 200 kWh ceiling";
-          document.getElementById("meterCeilingStatus").innerText = "WITHIN CEILING";
+          document.getElementById("forecastMarginText").innerText = "Under 200 ceiling";
+          ceilingBadge.innerText = "SAFE";
+          ceilingBadge.style.color = "green";
         } else {
-          document.getElementById("forecastMarginText").innerText = "OVER 200 kWh ceiling!";
-          document.getElementById("meterCeilingStatus").innerText = "CEILING BREACHED";
+          document.getElementById("forecastMarginText").innerText = "Over 200 ceiling!";
+          ceilingBadge.innerText = "EXCEEDED";
+          ceilingBadge.style.color = "red";
         }
 
         const pct = Math.min(100, Math.round((data.predictedKwh / 200.0) * 100));
-        document.getElementById("forecastMeterFill").style.width = pct + "%";
+        const meterFill = document.getElementById("forecastMeterFill");
+        meterFill.style.width = pct + "%";
+        meterFill.style.backgroundColor = pct <= 88 ? "#2e7d32" : (pct <= 100 ? "#f57f17" : "#c62828");
+
         document.getElementById("lblEntitlement").innerText = (data.entitlementLimitKwh || 176.0).toFixed(1) + " kWh";
         document.getElementById("lblProjected").innerText = data.predictedKwh.toFixed(1) + " kWh";
-        document.getElementById("lblPercent").innerText = pct + "% of 200-Unit Ceiling";
+        document.getElementById("lblPercent").innerText = pct + "% of 200 units";
 
         const userBudget = data.monthlyBudgetInr || budgetInr || 2500.0;
         const projectedBill = data.grossBillInr || 0.0;
@@ -369,7 +260,9 @@
         document.getElementById("lblBudgetProjectedBill").innerText = projectedBill.toFixed(2);
         document.getElementById("lblBudgetThresholdLimit").innerText = userBudget.toFixed(2);
         const meterBudgetPct = Math.min(100, Math.max(5, Math.round(utilPct)));
-        document.getElementById("meterBudgetFill").style.width = meterBudgetPct + "%";
+        const budgetFill = document.getElementById("meterBudgetFill");
+        budgetFill.style.width = meterBudgetPct + "%";
+        budgetFill.style.backgroundColor = utilPct <= 80 ? "#2e7d32" : (utilPct <= 100 ? "#f57f17" : "#c62828");
 
         const badgeBudget = document.getElementById("badgeBudgetStatus");
         const badgeWarning = document.getElementById("lblBudgetWarningBadge");
@@ -377,25 +270,25 @@
 
         if (data.budgetStatus === "WITHIN_BUDGET" || utilPct < 80.0) {
           badgeBudget.innerText = "WITHIN BUDGET";
-          badgeWarning.innerText = "SAFE CONSUMPTION";
-          document.getElementById("lblBudgetRemainingBuffer").innerText = `Remaining Buffer: +₹${budgetMargin.toFixed(2)}`;
-          document.getElementById("lblBudgetPercent").innerText = `${utilPct.toFixed(1)}% of Budget Utilized`;
-          warningText.innerText = data.budgetWarningMessage ||
-            `Safe: Projected electricity bill of ₹${projectedBill.toFixed(2)} is well within your monthly budget of ₹${userBudget.toFixed(2)} (${utilPct.toFixed(1)}% utilized). Remaining buffer is ₹${budgetMargin.toFixed(2)}.`;
+          badgeBudget.style.color = "green";
+          badgeWarning.innerText = "SAFE";
+          document.getElementById("lblBudgetRemainingBuffer").innerText = `Buffer: +₹${budgetMargin.toFixed(2)}`;
+          document.getElementById("lblBudgetPercent").innerText = `${utilPct.toFixed(1)}% used`;
+          warningText.innerText = `Projected bill (₹${projectedBill.toFixed(2)}) is within budget.`;
         } else if (data.budgetStatus === "APPROACHING_BUDGET" || (utilPct >= 80.0 && utilPct <= 100.0)) {
-          badgeBudget.innerText = "APPROACHING BUDGET LIMIT";
-          badgeWarning.innerText = "BUDGET WARNING";
-          document.getElementById("lblBudgetRemainingBuffer").innerText = `Caution Buffer: +₹${budgetMargin.toFixed(2)}`;
-          document.getElementById("lblBudgetPercent").innerText = `${utilPct.toFixed(1)}% of Budget Utilized`;
-          warningText.innerText = data.budgetWarningMessage ||
-            `Warning: Projected electricity bill of ₹${projectedBill.toFixed(2)} is approaching your monthly budget of ₹${userBudget.toFixed(2)} (${utilPct.toFixed(1)}% utilized). Remaining buffer is only ₹${budgetMargin.toFixed(2)}. Consider moderating heavy appliance usage.`;
+          badgeBudget.innerText = "NEAR BUDGET";
+          badgeBudget.style.color = "#f57f17";
+          badgeWarning.innerText = "WARNING";
+          document.getElementById("lblBudgetRemainingBuffer").innerText = `Buffer: +₹${budgetMargin.toFixed(2)}`;
+          document.getElementById("lblBudgetPercent").innerText = `${utilPct.toFixed(1)}% used`;
+          warningText.innerText = `Projected bill is close to budget limit. Buffer remaining: ₹${budgetMargin.toFixed(2)}.`;
         } else {
-          badgeBudget.innerText = "BUDGET EXCEEDED";
-          badgeWarning.innerText = "BUDGET BREACH ALERT";
-          document.getElementById("lblBudgetRemainingBuffer").innerText = `Over Budget: -₹${Math.abs(budgetMargin).toFixed(2)}`;
-          document.getElementById("lblBudgetPercent").innerText = `${utilPct.toFixed(1)}% of Budget (EXCEEDED)`;
-          warningText.innerText = data.budgetWarningMessage ||
-            `Alert: Model forecasts your electricity bill of ₹${projectedBill.toFixed(2)} will cross your budget threshold of ₹${userBudget.toFixed(2)} by ₹${Math.abs(budgetMargin).toFixed(2)} (${utilPct.toFixed(1)}% of budget)! Immediate load reduction recommended.`;
+          badgeBudget.innerText = "EXCEEDED";
+          badgeBudget.style.color = "red";
+          badgeWarning.innerText = "EXCEEDED";
+          document.getElementById("lblBudgetRemainingBuffer").innerText = `Over: -₹${Math.abs(budgetMargin).toFixed(2)}`;
+          document.getElementById("lblBudgetPercent").innerText = `${utilPct.toFixed(1)}% (Over)`;
+          warningText.innerText = `Projected bill will exceed budget by ₹${Math.abs(budgetMargin).toFixed(2)}!`;
         }
 
         document.getElementById("metricDailyBurn").innerText = data.dailyRunRateKwh.toFixed(2);
@@ -404,15 +297,18 @@
 
         const badge = document.getElementById("midMonthStatusBadge");
         if (data.predictedKwh <= data.entitlementLimitKwh && data.predictedKwh <= 200.0) {
-          badge.innerText = "ON TRACK FOR ZERO BILL";
+          badge.innerText = "ZERO BILL ELIGIBLE";
+          badge.style.color = "green";
         } else if (data.predictedKwh > data.entitlementLimitKwh && data.predictedKwh <= 200.0) {
-          badge.innerText = "APPROACHING ENTITLEMENT";
+          badge.innerText = "EXCESS BILLED";
+          badge.style.color = "#f57f17";
         } else {
-          badge.innerText = "CEILING BREACH RISK";
+          badge.innerText = "SUBSIDY LOST";
+          badge.style.color = "red";
         }
 
-        document.getElementById("midMonthAdvisory").innerText = data.paceAdvisory || 
-          `At current pace of ${data.dailyRunRateKwh.toFixed(2)} kWh/day, projected consumption is ${data.predictedKwh.toFixed(1)} kWh.`;
+        document.getElementById("midMonthAdvisory").innerText = 
+          `Pace: ${data.dailyRunRateKwh.toFixed(2)} units/day, Projected: ${data.predictedKwh.toFixed(1)} kWh.`;
 
       } catch (err) {
         console.error("Error loading forecast:", err);

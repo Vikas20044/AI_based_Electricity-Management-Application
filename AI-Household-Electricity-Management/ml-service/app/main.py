@@ -18,13 +18,15 @@ app.add_middleware(
 
 app.include_router(prediction_router)
 
+from app.services.ml_inference_service import inference_service
+
 @app.get("/health", tags=["Health Check"])
 async def health_check():
     return {
         "status": "UP",
         "service": "Electricity Consumption ML Inference Microservice",
         "framework": "FastAPI + Uvicorn",
-        "active_model": "Linear Regression (Selected Best Model)"
+        "active_model": inference_service.predictor.model_name
     }
 
 if __name__ == "__main__":

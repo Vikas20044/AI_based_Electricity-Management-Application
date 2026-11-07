@@ -86,7 +86,7 @@ def run_pipeline():
     print(f"    -> Saved schema to:       {os.path.join(preprocessing_dir, 'feature_schema.json')}")
     print(f"    -> Saved metadata to:     {os.path.join(preprocessing_dir, 'target_metadata.json')}")
 
-    print("\n[Step 5/7] Training 5 Machine Learning Regression Models...")
+    print("\n[Step 5/7] Training 7 Machine Learning & Deep Learning Regression Models...")
     trained_models = train_all_models(
         X_train_processed=X_train_proc,
         y_train=y_train,
@@ -94,7 +94,7 @@ def run_pipeline():
         random_state=42
     )
 
-    print("\n[Step 6/7] Evaluating All 5 Models on Supplied Testing Dataset...")
+    print("\n[Step 6/7] Evaluating All 7 Models on Cleaned Testing Dataset...")
     comparison_df, eval_records, predictions_dict = evaluate_all_models(
         trained_models=trained_models,
         X_train_processed=X_train_proc,

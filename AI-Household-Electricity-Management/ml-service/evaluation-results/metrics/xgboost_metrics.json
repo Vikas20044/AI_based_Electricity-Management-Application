@@ -1,16 +1,16 @@
 {
     "model_name": "XGBoost",
     "train_metrics": {
-        "MAE": 9.9808,
-        "MSE": 475.505,
-        "RMSE": 21.8061,
-        "R2": 0.9303
+        "MAE": 5.8734,
+        "MSE": 70.4947,
+        "RMSE": 8.3961,
+        "R2": 0.9903
     },
     "test_metrics": {
-        "MAE": 16.2979,
-        "MSE": 4111.1927,
-        "RMSE": 64.1186,
-        "R2": 0.655
+        "MAE": 15.658,
+        "MSE": 470.3898,
+        "RMSE": 21.6885,
+        "R2": 0.935
     },
-    "training_time_seconds": 2.131218910217285
+    "training_time_seconds": 1.7431461811065674
 }

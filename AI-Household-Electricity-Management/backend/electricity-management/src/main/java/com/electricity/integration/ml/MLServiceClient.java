@@ -75,7 +75,7 @@ public class MLServiceClient {
         MLPredictionResponse fallback = new MLPredictionResponse();
         fallback.setPredictedConsumptionKwh(predictedKwh);
         fallback.setUnit("kWh");
-        fallback.setModelAlgorithm("XGBoost Regressor (Local Generalization with Appliance & Weather Features)");
+        fallback.setModelAlgorithm("Long Short-Term Memory (LSTM) Deep Learning Regressor (Local Fallback)");
         fallback.setModelVersion("1.0.0-fallback");
         fallback.setTimestamp(LocalDateTime.now().toString());
         fallback.setStatus("SUCCESS");

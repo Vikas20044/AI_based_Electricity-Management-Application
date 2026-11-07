@@ -1,52 +1,72 @@
 [
     {
-        "Model": "Linear Regression",
-        "Train_MAE": 19.5242,
-        "Train_RMSE": 34.3945,
-        "Train_R2": 0.8266,
-        "Test_MAE": 28.2591,
-        "Test_MSE": 3738.3687,
-        "Test_RMSE": 61.1422,
-        "Test_R2": 0.6863
-    },
-    {
         "Model": "Random Forest",
-        "Train_MAE": 8.393,
-        "Train_RMSE": 20.896,
-        "Train_R2": 0.936,
-        "Test_MAE": 14.8406,
-        "Test_MSE": 3951.5159,
-        "Test_RMSE": 62.8611,
-        "Test_R2": 0.6684
+        "Train_MAE": 5.934,
+        "Train_RMSE": 8.6461,
+        "Train_R2": 0.9897,
+        "Test_MAE": 14.6269,
+        "Test_MSE": 394.5442,
+        "Test_RMSE": 19.8631,
+        "Test_R2": 0.9455
     },
     {
-        "Model": "Decision Tree",
-        "Train_MAE": 4.3361,
-        "Train_RMSE": 18.6409,
-        "Train_R2": 0.9491,
-        "Test_MAE": 8.512,
-        "Test_MSE": 4054.9276,
-        "Test_RMSE": 63.6783,
-        "Test_R2": 0.6597
+        "Model": "LSTM",
+        "Train_MAE": 14.1469,
+        "Train_RMSE": 20.3899,
+        "Train_R2": 0.9427,
+        "Test_MAE": 14.9951,
+        "Test_MSE": 401.8194,
+        "Test_RMSE": 20.0454,
+        "Test_R2": 0.9445
+    },
+    {
+        "Model": "Temporal Fusion Transformer",
+        "Train_MAE": 14.0979,
+        "Train_RMSE": 20.3158,
+        "Train_R2": 0.9431,
+        "Test_MAE": 15.1632,
+        "Test_MSE": 427.077,
+        "Test_RMSE": 20.6658,
+        "Test_R2": 0.941
     },
     {
         "Model": "XGBoost",
-        "Train_MAE": 9.9808,
-        "Train_RMSE": 21.8061,
-        "Train_R2": 0.9303,
-        "Test_MAE": 16.2979,
-        "Test_MSE": 4111.1927,
-        "Test_RMSE": 64.1186,
-        "Test_R2": 0.655
+        "Train_MAE": 5.8734,
+        "Train_RMSE": 8.3961,
+        "Train_R2": 0.9903,
+        "Test_MAE": 15.658,
+        "Test_MSE": 470.3898,
+        "Test_RMSE": 21.6885,
+        "Test_R2": 0.935
     },
     {
         "Model": "KNN",
-        "Train_MAE": 16.7042,
-        "Train_RMSE": 29.8365,
-        "Train_R2": 0.8695,
-        "Test_MAE": 26.4757,
-        "Test_MSE": 4696.2459,
-        "Test_RMSE": 68.5292,
-        "Test_R2": 0.6059
+        "Train_MAE": 14.0167,
+        "Train_RMSE": 19.3084,
+        "Train_R2": 0.9486,
+        "Test_MAE": 16.4546,
+        "Test_MSE": 474.7857,
+        "Test_RMSE": 21.7896,
+        "Test_R2": 0.9344
+    },
+    {
+        "Model": "Linear Regression",
+        "Train_MAE": 17.6881,
+        "Train_RMSE": 23.0094,
+        "Train_R2": 0.927,
+        "Test_MAE": 17.1591,
+        "Test_MSE": 540.384,
+        "Test_RMSE": 23.2462,
+        "Test_R2": 0.9253
+    },
+    {
+        "Model": "Decision Tree",
+        "Train_MAE": 0.5118,
+        "Train_RMSE": 3.1234,
+        "Train_R2": 0.9987,
+        "Test_MAE": 17.4717,
+        "Test_MSE": 698.7053,
+        "Test_RMSE": 26.433,
+        "Test_R2": 0.9035
     }
 ]

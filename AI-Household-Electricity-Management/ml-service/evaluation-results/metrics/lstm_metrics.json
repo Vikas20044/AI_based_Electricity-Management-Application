@@ -1,0 +1,16 @@
+{
+    "model_name": "LSTM",
+    "train_metrics": {
+        "MAE": 14.1469,
+        "MSE": 415.7468,
+        "RMSE": 20.3899,
+        "R2": 0.9427
+    },
+    "test_metrics": {
+        "MAE": 14.9951,
+        "MSE": 401.8194,
+        "RMSE": 20.0454,
+        "R2": 0.9445
+    },
+    "training_time_seconds": 31.423079252243042
+}

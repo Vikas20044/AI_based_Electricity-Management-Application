@@ -26,9 +26,9 @@ class ElectricityPredictor:
         self._load_artifacts()
 
     def _load_artifacts(self):
-        xgb_model_path = os.path.join(self.trained_dir, "xgboost_model.joblib")
         best_model_path = os.path.join(self.trained_dir, "best_model.joblib")
-        model_path = xgb_model_path if os.path.exists(xgb_model_path) else best_model_path
+        xgb_model_path = os.path.join(self.trained_dir, "xgboost_model.joblib")
+        model_path = best_model_path if os.path.exists(best_model_path) else xgb_model_path
         preprocessor_path = os.path.join(self.preprocessing_dir, "preprocessor.joblib")
         schema_path = os.path.join(self.preprocessing_dir, "feature_schema.json")
         target_path = os.path.join(self.preprocessing_dir, "target_metadata.json")
@@ -49,7 +49,23 @@ class ElectricityPredictor:
             with open(target_path, "r", encoding="utf-8") as f:
                 self.target_metadata = json.load(f)
 
-        self.model_name = "XGBoost Regressor (Extreme Gradient Boosting)" if "xgb" in str(type(self.model)).lower() else type(self.model).__name__
+        model_type_str = type(self.model).__name__.lower()
+        if "randomforest" in model_type_str:
+            self.model_name = "Random Forest Regressor (Ensemble)"
+        elif "xgb" in model_type_str:
+            self.model_name = "XGBoost Regressor (Extreme Gradient Boosting)"
+        elif "linear" in model_type_str:
+            self.model_name = "Linear Regression (Ordinary Least Squares)"
+        elif "decisiontree" in model_type_str:
+            self.model_name = "Decision Tree Regressor"
+        elif "kneighbor" in model_type_str:
+            self.model_name = "K-Nearest Neighbors Regressor (KNN)"
+        elif "lstm" in model_type_str:
+            self.model_name = "Long Short-Term Memory (LSTM) Deep Learning Regressor"
+        elif "temporal" in model_type_str or "tft" in model_type_str:
+            self.model_name = "Temporal Fusion Transformer (TFT) Deep Learning Regressor"
+        else:
+            self.model_name = type(self.model).__name__
 
     def _format_input(self, data: Union[Dict[str, Any], List[Dict[str, Any]], pd.DataFrame]) -> pd.DataFrame:
         if isinstance(data, dict):
@@ -61,15 +77,18 @@ class ElectricityPredictor:
         else:
             raise TypeError("Input must be a dict, list of dicts, or pandas DataFrame.")
 
+        try:
+            from src.features.feature_pipeline import clean_dataframe
+            df = clean_dataframe(df)
+        except Exception:
+            pass
+
         if self.feature_schema and "feature_order" in self.feature_schema:
             expected_cols = self.feature_schema["feature_order"]
             for col in expected_cols:
                 if col not in df.columns:
                     df[col] = np.nan
             df = df[expected_cols]
-
-        if "large_household_flag" in df.columns:
-            df["large_household_flag"] = df["large_household_flag"].fillna(0).astype(int)
 
         return df
 

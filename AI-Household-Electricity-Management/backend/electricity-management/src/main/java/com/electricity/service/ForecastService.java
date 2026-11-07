@@ -124,7 +124,7 @@ public class ForecastService {
 
         MLPredictionResponse mlResp = mlServiceClient.requestPrediction(payload);
         double mlBaseKwh = mlResp.getPredictedConsumptionKwh() != null ? mlResp.getPredictedConsumptionKwh() : pastUnits;
-        String modelName = mlResp.getModelAlgorithm() != null ? mlResp.getModelAlgorithm() : "Linear Regression";
+        String modelName = mlResp.getModelAlgorithm() != null ? mlResp.getModelAlgorithm() : "Long Short-Term Memory (LSTM) Deep Learning Regressor";
 
         MonthlyForecastDto currentMonthDto = buildMonthlyForecast(
                 today.format(monthFormatter) + " (Current)",

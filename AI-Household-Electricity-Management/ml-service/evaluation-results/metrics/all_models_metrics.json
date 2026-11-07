@@ -2,81 +2,113 @@
     "Linear Regression": {
         "model_name": "Linear Regression",
         "train_metrics": {
-            "MAE": 19.5242,
-            "MSE": 1182.9818,
-            "RMSE": 34.3945,
-            "R2": 0.8266
+            "MAE": 17.6881,
+            "MSE": 529.4306,
+            "RMSE": 23.0094,
+            "R2": 0.927
         },
         "test_metrics": {
-            "MAE": 28.2591,
-            "MSE": 3738.3687,
-            "RMSE": 61.1422,
-            "R2": 0.6863
+            "MAE": 17.1591,
+            "MSE": 540.384,
+            "RMSE": 23.2462,
+            "R2": 0.9253
         },
-        "training_time_seconds": 0.042180776596069336
+        "training_time_seconds": 0.007811546325683594
     },
     "Decision Tree": {
         "model_name": "Decision Tree",
         "train_metrics": {
-            "MAE": 4.3361,
-            "MSE": 347.4827,
-            "RMSE": 18.6409,
-            "R2": 0.9491
+            "MAE": 0.5118,
+            "MSE": 9.7559,
+            "RMSE": 3.1234,
+            "R2": 0.9987
         },
         "test_metrics": {
-            "MAE": 8.512,
-            "MSE": 4054.9276,
-            "RMSE": 63.6783,
-            "R2": 0.6597
+            "MAE": 17.4717,
+            "MSE": 698.7053,
+            "RMSE": 26.433,
+            "R2": 0.9035
         },
-        "training_time_seconds": 0.31453514099121094
+        "training_time_seconds": 0.033846139907836914
     },
     "Random Forest": {
         "model_name": "Random Forest",
         "train_metrics": {
-            "MAE": 8.393,
-            "MSE": 436.6447,
-            "RMSE": 20.896,
-            "R2": 0.936
+            "MAE": 5.934,
+            "MSE": 74.7555,
+            "RMSE": 8.6461,
+            "R2": 0.9897
         },
         "test_metrics": {
-            "MAE": 14.8406,
-            "MSE": 3951.5159,
-            "RMSE": 62.8611,
-            "R2": 0.6684
+            "MAE": 14.6269,
+            "MSE": 394.5442,
+            "RMSE": 19.8631,
+            "R2": 0.9455
         },
-        "training_time_seconds": 2.4342663288116455
+        "training_time_seconds": 0.4627397060394287
     },
     "XGBoost": {
         "model_name": "XGBoost",
         "train_metrics": {
-            "MAE": 9.9808,
-            "MSE": 475.505,
-            "RMSE": 21.8061,
-            "R2": 0.9303
+            "MAE": 5.8734,
+            "MSE": 70.4947,
+            "RMSE": 8.3961,
+            "R2": 0.9903
         },
         "test_metrics": {
-            "MAE": 16.2979,
-            "MSE": 4111.1927,
-            "RMSE": 64.1186,
-            "R2": 0.655
+            "MAE": 15.658,
+            "MSE": 470.3898,
+            "RMSE": 21.6885,
+            "R2": 0.935
         },
-        "training_time_seconds": 2.131218910217285
+        "training_time_seconds": 1.7431461811065674
     },
     "KNN": {
         "model_name": "KNN",
         "train_metrics": {
-            "MAE": 16.7042,
-            "MSE": 890.2171,
-            "RMSE": 29.8365,
-            "R2": 0.8695
+            "MAE": 14.0167,
+            "MSE": 372.8131,
+            "RMSE": 19.3084,
+            "R2": 0.9486
         },
         "test_metrics": {
-            "MAE": 26.4757,
-            "MSE": 4696.2459,
-            "RMSE": 68.5292,
-            "R2": 0.6059
+            "MAE": 16.4546,
+            "MSE": 474.7857,
+            "RMSE": 21.7896,
+            "R2": 0.9344
         },
-        "training_time_seconds": 0.0035851001739501953
+        "training_time_seconds": 0.0018076896667480469
+    },
+    "LSTM": {
+        "model_name": "LSTM",
+        "train_metrics": {
+            "MAE": 14.1469,
+            "MSE": 415.7468,
+            "RMSE": 20.3899,
+            "R2": 0.9427
+        },
+        "test_metrics": {
+            "MAE": 14.9951,
+            "MSE": 401.8194,
+            "RMSE": 20.0454,
+            "R2": 0.9445
+        },
+        "training_time_seconds": 31.423079252243042
+    },
+    "Temporal Fusion Transformer": {
+        "model_name": "Temporal Fusion Transformer",
+        "train_metrics": {
+            "MAE": 14.0979,
+            "MSE": 412.7334,
+            "RMSE": 20.3158,
+            "R2": 0.9431
+        },
+        "test_metrics": {
+            "MAE": 15.1632,
+            "MSE": 427.077,
+            "RMSE": 20.6658,
+            "R2": 0.941
+        },
+        "training_time_seconds": 36.004749059677124
     }
 }

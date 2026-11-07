@@ -3,11 +3,11 @@
     "unit": "kWh",
     "description": "End-of-month household electricity consumption in kWh",
     "train_statistics": {
-        "count": 8655,
-        "mean": 141.16170474870017,
-        "std": 82.60327361187164,
+        "count": 2520,
+        "mean": 125.76984126984127,
+        "std": 85.20376181464418,
         "min": 0.0,
-        "median": 130.8021,
-        "max": 463.1707
+        "median": 109.0,
+        "max": 500.0
     }
 }

@@ -2,12 +2,14 @@
 Model Training Module
 AI-Based Household Electricity Management Application
 
-Trains five regression algorithms:
+Trains seven regression algorithms:
 1. Linear Regression (Baseline)
 2. Decision Tree Regression
 3. Random Forest Regression
 4. XGBoost Regression
 5. K-Nearest Neighbors (KNN) Regression
+6. Long Short-Term Memory (LSTM) Deep Learning Regressor
+7. Temporal Fusion Transformer (TFT) Deep Learning Regressor
 """
 
 import os
@@ -22,17 +24,25 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from xgboost import XGBRegressor
 
+from src.training.deep_learning_models import (
+    LSTMModel,
+    TemporalFusionTransformerModel
+)
+
 MODEL_FILENAMES = {
     "Linear Regression": "linear_regression_model.joblib",
     "Decision Tree": "decision_tree_model.joblib",
     "Random Forest": "random_forest_model.joblib",
     "XGBoost": "xgboost_model.joblib",
-    "KNN": "knn_model.joblib"
+    "KNN": "knn_model.joblib",
+    "LSTM": "lstm_model.joblib",
+    "Temporal Fusion Transformer": "temporal_fusion_transformer_model.joblib"
 }
 
 def get_model_instances(random_state: int = 42) -> Dict[str, Any]:
     """
-    Instantiates the five candidate regression models with standardized hyperparameters.
+    Instantiates candidate regression models:
+    5 Classical ML models + 2 Deep Learning models (LSTM & Temporal Fusion Transformer).
     """
     models = {
         "Linear Regression": LinearRegression(),
@@ -54,6 +64,26 @@ def get_model_instances(random_state: int = 42) -> Dict[str, Any]:
             n_neighbors=5,
             weights="uniform",
             n_jobs=-1
+        ),
+        "LSTM": LSTMModel(
+            hidden_dim=64,
+            num_layers=2,
+            seq_len=4,
+            dropout=0.15,
+            batch_size=64,
+            epochs=50,
+            lr=0.003,
+            random_state=random_state
+        ),
+        "Temporal Fusion Transformer": TemporalFusionTransformerModel(
+            d_model=64,
+            n_heads=4,
+            seq_len=4,
+            dropout=0.15,
+            batch_size=64,
+            epochs=50,
+            lr=0.003,
+            random_state=random_state
         )
     }
     return models
@@ -96,7 +126,7 @@ def train_all_models(
         if output_dir:
             filename = MODEL_FILENAMES.get(name, f"{name.lower().replace(' ', '_')}_model.joblib")
             saved_path = os.path.join(output_dir, filename)
-            joblib.dump(fitted_model, saved_path)
+            joblib.dump(fitted_model, saved_path, compress=3)
             print(f"    -> Saved {name} artifact to: {saved_path}")
 
         trained_results[name] = {
@@ -114,7 +144,7 @@ def save_trained_model(model: Any, model_name: str, output_dir: str) -> str:
     os.makedirs(output_dir, exist_ok=True)
     filename = MODEL_FILENAMES.get(model_name, f"{model_name.lower().replace(' ', '_')}_model.joblib")
     path = os.path.join(output_dir, filename)
-    joblib.dump(model, path)
+    joblib.dump(model, path, compress=3)
     return path
 
 def save_best_model(model: Any, output_dir: str) -> str:
@@ -123,6 +153,6 @@ def save_best_model(model: Any, output_dir: str) -> str:
     """
     os.makedirs(output_dir, exist_ok=True)
     path = os.path.join(output_dir, "best_model.joblib")
-    joblib.dump(model, path)
+    joblib.dump(model, path, compress=3)
     print(f"[+] Successfully saved selected best model to: {path}")
     return path

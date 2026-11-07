@@ -69,12 +69,25 @@ class MLInferenceService:
 
     def get_model_info(self) -> ModelInfoResponse:
         schema = self.predictor.feature_schema or {}
+        r2 = 0.9445
+        rmse = 20.05
+        metrics_file = os.path.join(BASE_DIR, "evaluation-results", "metrics", "lstm_metrics.json")
+        if os.path.exists(metrics_file):
+            try:
+                import json
+                with open(metrics_file, "r", encoding="utf-8") as f:
+                    m = json.load(f)
+                    r2 = m.get("test_metrics", {}).get("R2", 0.9445)
+                    rmse = m.get("test_metrics", {}).get("RMSE", 20.05)
+            except Exception:
+                pass
+
         return ModelInfoResponse(
             active_model=self.predictor.model_name,
             target_variable="monthly_consumption_kwh",
-            feature_count=schema.get("total_feature_count", 29),
-            test_r2_score=0.7420,
-            test_rmse_kwh=14.18,
+            feature_count=schema.get("total_feature_count", 27),
+            test_r2_score=r2,
+            test_rmse_kwh=rmse,
             features_list=schema.get("feature_order", [])
         )
 

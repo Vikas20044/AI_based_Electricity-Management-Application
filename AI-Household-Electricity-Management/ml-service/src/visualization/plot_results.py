@@ -31,7 +31,7 @@ def plot_model_comparison(comparison_df: pd.DataFrame, output_dir: str) -> str:
     x = np.arange(len(models))
     width = 0.25
 
-    fig, ax1 = plt.subplots(figsize=(12, 6))
+    fig, ax1 = plt.subplots(figsize=(15, 6))
 
     color_mae = "#2b5c8f"
     color_rmse = "#d95f02"
@@ -42,9 +42,9 @@ def plot_model_comparison(comparison_df: pd.DataFrame, output_dir: str) -> str:
 
     ax1.set_ylabel("Error Metric Value (kWh)", fontsize=12, fontweight="bold")
     ax1.set_xlabel("Regression Algorithm", fontsize=12, fontweight="bold")
-    ax1.set_title("Machine Learning Models: Performance Metrics Comparison on Test Set", fontsize=14, fontweight="bold", pad=15)
+    ax1.set_title("Machine Learning & Deep Learning Models: Performance Metrics Comparison on Test Set", fontsize=14, fontweight="bold", pad=15)
     ax1.set_xticks(x)
-    ax1.set_xticklabels(models, fontsize=10, rotation=15)
+    ax1.set_xticklabels(models, fontsize=9, rotation=15)
     ax1.grid(axis="y", linestyle="--", alpha=0.4)
 
     ax2 = ax1.twinx()
@@ -82,14 +82,17 @@ def plot_actual_vs_predicted(
     output_dir: str
 ) -> str:
     """
-    Creates a 2x3 grid of scatter plots showing Actual vs. Predicted values.
+    Creates a grid of scatter plots showing Actual vs. Predicted values across all models.
     """
     os.makedirs(output_dir, exist_ok=True)
-    fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+    model_names = list(predictions_dict.keys())
+    n_models = len(model_names)
+    n_cols = 3
+    n_rows = int(np.ceil(n_models / n_cols))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(16, 4.5 * n_rows))
     axes = axes.flatten()
 
-    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
-    model_names = list(predictions_dict.keys())
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
 
     max_val = max(float(y_true.max()), max([float(np.max(p)) for p in predictions_dict.values()]))
 
@@ -128,11 +131,14 @@ def plot_error_distribution(
     Plots residual (error = Actual - Predicted) distribution histograms for all models.
     """
     os.makedirs(output_dir, exist_ok=True)
-    fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+    model_names = list(predictions_dict.keys())
+    n_models = len(model_names)
+    n_cols = 3
+    n_rows = int(np.ceil(n_models / n_cols))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(16, 4.5 * n_rows))
     axes = axes.flatten()
 
-    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
-    model_names = list(predictions_dict.keys())
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
 
     for idx, name in enumerate(model_names):
         ax = axes[idx]

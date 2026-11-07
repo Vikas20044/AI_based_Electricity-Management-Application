@@ -22,58 +22,54 @@ TARGET_COLUMN: str = "monthly_consumption_kwh"
 CATEGORICAL_FEATURES: List[str] = [
     "state",
     "district",
-    "area_type",
-    "dwelling_type",
-    "season"
+    "season",
+    "dwelling_type"
 ]
 
 NUMERICAL_FEATURES: List[str] = [
     "household_size",
-    "large_household_flag",
+    "appliance_count",
     "year",
     "month_number",
-    "days_in_month",
-    "month_sin",
-    "month_cos",
-    "mean_temperature_c",
-    "mean_relative_humidity_pct",
-    "monthly_rainfall_mm",
-    "previous_month_consumption_kwh",
-    "previous_2_month_consumption_kwh",
-    "previous_3_month_consumption_kwh",
-    "previous_month_bill_inr",
-    "previous_2_month_bill_inr",
-    "previous_3_month_bill_inr",
-    "prior_3_month_avg_consumption_kwh",
-    "prior_3_month_avg_bill_inr",
-    "prior_3_month_observation_count",
-    "historical_mean_consumption_kwh",
-    "historical_mean_bill_inr",
-    "historical_observations_count",
-    "lag1_vs_lag2_consumption_change_kwh",
-    "lag1_vs_lag2_consumption_change_pct"
+    "temperature",
+    "mean_max_temperature_c",
+    "mean_min_temperature_c",
+    "temperature_range_c",
+    "humidity",
+    "rainfall",
+    "has_air_conditioner",
+    "has_air_cooler",
+    "has_refrigerator",
+    "has_washing_machine",
+    "has_water_geyser",
+    "has_water_pump",
+    "has_television",
+    "has_mixer_grinder",
+    "lag_1_consumption",
+    "lag_2_consumption",
+    "previous_month_consumption",
+    "rolling_average_consumption",
+    "consumption_change_mom_kwh"
 ]
 
 FEATURE_COLUMNS: List[str] = CATEGORICAL_FEATURES + NUMERICAL_FEATURES
 
 LEAKAGE_COLUMNS: List[str] = [
-    "estimated_bill_inr",
-    "zero_consumption_flag",
-    "high_consumption_flag",
-    "bill_zero_usage_flag",
-    "bill_per_kwh_original",
-    "bill_ratio_review_flag",
-    "consumption_imputed_flag",
-    "daily_average_consumption_kwh",
-    "consumption_per_person_kwh",
-    "bill_per_kwh"
+    "gross_electricity_bill_inr",
+    "electricity_bill_inr",
+    "gruha_jyothi_eligible",
+    "is_zero_bill",
+    "effective_tariff_rate_inr",
+    "per_capita_consumption_kwh"
 ]
 
 METADATA_COLUMNS: List[str] = [
+    "observation_id",
     "household_id",
     "location",
-    "month",
-    "month_date"
+    "data_origin",
+    "simulation_flag",
+    "month_name"
 ]
 
 def build_preprocessing_pipeline() -> ColumnTransformer:
@@ -104,11 +100,53 @@ def build_preprocessing_pipeline() -> ColumnTransformer:
 
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Cleans raw DataFrame by ensuring appropriate types for boolean and numeric columns.
+    Cleans raw DataFrame by ensuring appropriate types, mapping inference aliases,
+    and computing leak-free autoregressive past features.
     """
     df = df.copy()
-    if "large_household_flag" in df.columns:
-        df["large_household_flag"] = df["large_household_flag"].astype(int)
+
+    # Map aliases for inference compatibility
+    if "temperature" not in df.columns and "mean_temperature_c" in df.columns:
+        df["temperature"] = df["mean_temperature_c"]
+    if "humidity" not in df.columns and "mean_relative_humidity_pct" in df.columns:
+        df["humidity"] = df["mean_relative_humidity_pct"]
+    if "rainfall" not in df.columns and "monthly_rainfall_mm" in df.columns:
+        df["rainfall"] = df["monthly_rainfall_mm"]
+    if "previous_month_consumption" not in df.columns and "previous_month_consumption_kwh" in df.columns:
+        df["previous_month_consumption"] = df["previous_month_consumption_kwh"]
+    if "lag_1_consumption" not in df.columns:
+        df["lag_1_consumption"] = df.get("previous_month_consumption", df.get("previous_month_consumption_kwh", 100.0))
+    if "lag_2_consumption" not in df.columns:
+        df["lag_2_consumption"] = df.get("previous_2_month_consumption_kwh", df["lag_1_consumption"])
+
+    # Ensure leak-free past change and rolling average
+    if "lag_1_consumption" in df.columns and "lag_2_consumption" in df.columns:
+        df["consumption_change_mom_kwh"] = df["lag_1_consumption"] - df["lag_2_consumption"]
+        df["rolling_average_consumption"] = (df["lag_1_consumption"] + df["lag_2_consumption"]) / 2.0
+
+    # Ensure weather range defaults
+    if "temperature_range_c" not in df.columns:
+        t_max = df.get("mean_max_temperature_c", df.get("temperature", 30.0) + 4.0)
+        t_min = df.get("mean_min_temperature_c", df.get("temperature", 25.0) - 4.0)
+        df["mean_max_temperature_c"] = t_max
+        df["mean_min_temperature_c"] = t_min
+        df["temperature_range_c"] = t_max - t_min
+
+    # Ensure appliance flags
+    appliance_cols = [
+        "has_air_conditioner", "has_air_cooler", "has_refrigerator",
+        "has_washing_machine", "has_water_geyser", "has_water_pump",
+        "has_television", "has_mixer_grinder"
+    ]
+    for ac in appliance_cols:
+        if ac not in df.columns:
+            df[ac] = 0.0
+        else:
+            df[ac] = df[ac].fillna(0.0).astype(float)
+
+    if "appliance_count" not in df.columns:
+        df["appliance_count"] = 5.0
+
     return df
 
 def prepare_features(
