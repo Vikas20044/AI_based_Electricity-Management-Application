@@ -1,16 +1,16 @@
 {
     "model_name": "Linear Regression",
     "train_metrics": {
-        "MAE": 17.6881,
-        "MSE": 529.4306,
-        "RMSE": 23.0094,
-        "R2": 0.927
+        "MAE": 14.9648,
+        "MSE": 413.6001,
+        "RMSE": 20.3372,
+        "R2": 0.9322
     },
     "test_metrics": {
-        "MAE": 17.1591,
-        "MSE": 540.384,
-        "RMSE": 23.2462,
-        "R2": 0.9253
+        "MAE": 14.8626,
+        "MSE": 461.7486,
+        "RMSE": 21.4883,
+        "R2": 0.928
     },
-    "training_time_seconds": 0.007811546325683594
+    "training_time_seconds": 0.03533124923706055
 }

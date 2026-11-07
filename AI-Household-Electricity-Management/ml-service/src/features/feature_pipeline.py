@@ -118,13 +118,47 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         df["lag_1_consumption"] = df.get("previous_month_consumption", df.get("previous_month_consumption_kwh", 100.0))
     if "lag_2_consumption" not in df.columns:
         df["lag_2_consumption"] = df.get("previous_2_month_consumption_kwh", df["lag_1_consumption"])
+    if "previous_month_consumption" not in df.columns:
+        df["previous_month_consumption"] = df["lag_1_consumption"]
 
     # Ensure leak-free past change and rolling average
     if "lag_1_consumption" in df.columns and "lag_2_consumption" in df.columns:
         df["consumption_change_mom_kwh"] = df["lag_1_consumption"] - df["lag_2_consumption"]
         df["rolling_average_consumption"] = (df["lag_1_consumption"] + df["lag_2_consumption"]) / 2.0
 
+    # Ensure defaults for state, district, season, dwelling_type
+    if "state" not in df.columns:
+        df["state"] = "Karnataka"
+    if "district" not in df.columns:
+        df["district"] = "Bengaluru Urban"
+    if "household_size" not in df.columns:
+        df["household_size"] = 4.0
+    if "dwelling_type" not in df.columns:
+        df["dwelling_type"] = "2 BHK"
+    if "year" not in df.columns:
+        df["year"] = 2026
+    if "month_number" not in df.columns:
+        df["month_number"] = 11
+
+    if "season" not in df.columns:
+        def get_season(m):
+            if m in [12, 1, 2]:
+                return "Winter"
+            elif m in [3, 4, 5]:
+                return "Summer"
+            elif m in [6, 7, 8, 9]:
+                return "Monsoon"
+            return "Post-monsoon"
+        df["season"] = df["month_number"].apply(get_season)
+
     # Ensure weather range defaults
+    if "temperature" not in df.columns:
+        df["temperature"] = 26.5
+    if "humidity" not in df.columns:
+        df["humidity"] = 60.0
+    if "rainfall" not in df.columns:
+        df["rainfall"] = 45.0
+
     if "temperature_range_c" not in df.columns:
         t_max = df.get("mean_max_temperature_c", df.get("temperature", 30.0) + 4.0)
         t_min = df.get("mean_min_temperature_c", df.get("temperature", 25.0) - 4.0)

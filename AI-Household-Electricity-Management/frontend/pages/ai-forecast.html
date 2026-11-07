@@ -164,6 +164,53 @@
     </table>
   </fieldset>
 
+  <!-- 6. Next 12 Months Electricity & Bill Forecast -->
+  <fieldset>
+    <legend>Next 12 Months Electricity Consumption & Bill Forecast</legend>
+    <p style="font-size: 12px; color: #555; margin-top: 0; margin-bottom: 8px;">
+      Long Short-Term Memory (LSTM) deep learning projections incorporating seasonal Karnataka weather & district climate profiles.
+    </p>
+
+    <!-- Annual Summary Table -->
+    <table class="plain-table" style="margin-bottom: 12px; text-align: center;">
+      <tr style="background-color: #f0f4f8;">
+        <th style="width: 25%; text-align: center;">Total 12-Month Energy</th>
+        <th style="width: 25%; text-align: center;">Total Estimated Gross Bill</th>
+        <th style="width: 25%; text-align: center;">Total Gruha Jyothi Subsidy</th>
+        <th style="width: 25%; text-align: center;">Net Annual Payable</th>
+      </tr>
+      <tr style="font-size: 15px; font-weight: bold;">
+        <td><span id="annualTotalKwh" style="color: #003399;">--</span> <span style="font-size: 11px;">kWh</span></td>
+        <td>₹<span id="annualGrossBill" style="color: #444;">--</span></td>
+        <td>₹<span id="annualSubsidy" style="color: #2e7d32;">--</span></td>
+        <td>₹<span id="annualNetPayable" style="color: #c62828;">--</span></td>
+      </tr>
+    </table>
+
+    <!-- 12-Month Table -->
+    <div style="overflow-x: auto;">
+      <table class="plain-table" id="forecast12MonthsTable">
+        <thead>
+          <tr style="background-color: #f0f0f0; text-align: center; font-size: 12px;">
+            <th style="width: 5%;">#</th>
+            <th style="width: 15%;">Month</th>
+            <th style="width: 17%;">Season & Climate</th>
+            <th style="width: 17%;">Forecast (kWh)</th>
+            <th style="width: 13%;">Gross Bill</th>
+            <th style="width: 13%;">Subsidy</th>
+            <th style="width: 13%;">Net Payable</th>
+            <th style="width: 7%;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="forecast12MonthsTbody" style="font-size: 12px; text-align: center;">
+          <tr>
+            <td colspan="8" style="padding: 12px; color: #777;">Loading 12-month forecast...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </fieldset>
+
   <p style="text-align: right; margin-top: 15px;">
     <a href="gruha-jyothi.html" style="font-weight: bold; color: #003399;">
       Next: Check Gruha Jyothi Scheme &rarr;
@@ -309,6 +356,65 @@
 
         document.getElementById("midMonthAdvisory").innerText = 
           `Pace: ${data.dailyRunRateKwh.toFixed(2)} units/day, Projected: ${data.predictedKwh.toFixed(1)} kWh.`;
+
+        // Render Next 12 Months Electricity & Bill Forecast
+        if (data.upcoming12Months && data.upcoming12Months.length > 0) {
+          const tbody = document.getElementById("forecast12MonthsTbody");
+          tbody.innerHTML = "";
+
+          let totKwh = 0, totGross = 0, totSub = 0, totNet = 0;
+
+          data.upcoming12Months.forEach((m, idx) => {
+            const kwh = Number(m.predictedKwh || 0);
+            const gross = Number(m.estimatedBillInr || 0);
+            const sub = Number(m.subsidyBenefitInr || 0);
+            const net = Number(m.netPayableInr || 0);
+
+            totKwh += kwh;
+            totGross += gross;
+            totSub += sub;
+            totNet += net;
+
+            const isSafe = kwh <= 200.0;
+            const kwhColor = isSafe ? "#2e7d32" : "#c62828";
+
+            let statusHtml = "";
+            if (m.gruhaJyothiStatus === "ZERO_BILL" || net === 0) {
+              statusHtml = '<b style="color: #2e7d32; font-size: 11px;">ZERO BILL</b>';
+            } else if (m.gruhaJyothiStatus === "SUBSIDIZED_EXCESS" || m.retainsBenefit) {
+              statusHtml = '<b style="color: #f57f17; font-size: 11px;">SUBSIDIZED</b>';
+            } else {
+              statusHtml = '<b style="color: #c62828; font-size: 11px;">FULL TARIFF</b>';
+            }
+
+            const tempStr = m.temperatureC ? `${m.temperatureC.toFixed(1)}°C` : "";
+            const humStr = m.humidityPct ? `${Math.round(m.humidityPct)}% RH` : "";
+            const climateStr = (tempStr && humStr) ? `(${tempStr}, ${humStr})` : "";
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${idx + 1}</td>
+              <td style="font-weight: bold; text-align: left; padding-left: 8px;">${m.month || ("Month " + (idx+1))}</td>
+              <td><span style="font-weight: 500;">${m.season || "General"}</span> <span style="font-size: 10px; color: #666;">${climateStr}</span></td>
+              <td><b style="color: ${kwhColor};">${kwh.toFixed(1)}</b> <span style="font-size: 10px; color: #666;">kWh</span></td>
+              <td>₹${gross.toFixed(2)}</td>
+              <td style="color: #2e7d32;">${sub > 0 ? ("₹" + sub.toFixed(2)) : "-"}</td>
+              <td style="font-weight: bold; color: ${net === 0 ? "#2e7d32" : "#333"};">₹${net.toFixed(2)}</td>
+              <td>${statusHtml}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          const annualKwh = (data.totalAnnualProjectedKwh && data.totalAnnualProjectedKwh > 0) ? data.totalAnnualProjectedKwh : totKwh;
+          const annualGross = (data.totalAnnualEstimatedBillInr && data.totalAnnualEstimatedBillInr > 0) ? data.totalAnnualEstimatedBillInr : totGross;
+          const annualSub = (data.totalAnnualSubsidyBenefitInr !== undefined && data.totalAnnualSubsidyBenefitInr !== null) ? data.totalAnnualSubsidyBenefitInr : totSub;
+          const annualNet = (data.totalAnnualNetPayableInr !== undefined && data.totalAnnualNetPayableInr !== null) ? data.totalAnnualNetPayableInr : totNet;
+
+          document.getElementById("annualTotalKwh").innerText = annualKwh.toFixed(1);
+          document.getElementById("annualGrossBill").innerText = annualGross.toFixed(2);
+          document.getElementById("annualSubsidy").innerText = annualSub.toFixed(2);
+          document.getElementById("annualNetPayable").innerText = annualNet.toFixed(2);
+        }
 
       } catch (err) {
         console.error("Error loading forecast:", err);

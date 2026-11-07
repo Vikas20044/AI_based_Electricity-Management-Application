@@ -279,7 +279,12 @@ const ApiClient = {
             budgetUtilizationPct: utilPct,
             budgetMarginInr: marginInr,
             budgetStatus: bStatus,
-            budgetWarningMessage: bWarning
+            budgetWarningMessage: bWarning,
+            upcoming12Months: data.upcoming12Months || [],
+            totalAnnualProjectedKwh: data.totalAnnualProjectedKwh || 0.0,
+            totalAnnualEstimatedBillInr: data.totalAnnualEstimatedBillInr || 0.0,
+            totalAnnualSubsidyBenefitInr: data.totalAnnualSubsidyBenefitInr || 0.0,
+            totalAnnualNetPayableInr: data.totalAnnualNetPayableInr || 0.0
           };
         }
       }
@@ -354,6 +359,67 @@ const ApiClient = {
       advisory = `Alert: Current pace of ${dailyRate} kWh/day risks exceeding Karnataka's 200 kWh ceiling (${predictedKwh} kWh). Gruha Jyothi subsidy will be lost!`;
     }
 
+    // Calculate 12-Month forward projection locally if backend is unavailable
+    const upcomingList = [];
+    let totalAnnualKwh = 0.0;
+    let totalAnnualGross = 0.0;
+    let totalAnnualSubsidy = 0.0;
+    let totalAnnualNet = 0.0;
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+
+    for (let i = 1; i <= 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const mNum = d.getMonth() + 1;
+      const mLabel = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+
+      let season = "Winter";
+      let temp = 23.5;
+      let humidity = 54.0;
+      let multiplier = 0.93;
+
+      if (mNum >= 3 && mNum <= 5) {
+        season = "Summer";
+        temp = 33.5;
+        humidity = 48.0;
+        multiplier = 1.15;
+      } else if (mNum >= 6 && mNum <= 9) {
+        season = "Monsoon";
+        temp = 26.0;
+        humidity = 78.0;
+        multiplier = 0.94;
+      } else if (mNum >= 10 && mNum <= 11) {
+        season = "Post-monsoon";
+        temp = 27.5;
+        humidity = 65.0;
+        multiplier = 0.98;
+      }
+
+      const trend = 1.0 + (i * 0.003);
+      const mKwh = Math.round(predictedKwh * multiplier * trend * 10.0) / 10.0;
+      const mBill = this.calculateLocalBill(mKwh, load, entitledUnits);
+
+      upcomingList.push({
+        month: mLabel,
+        monthIndex: i,
+        season: season,
+        temperatureC: temp,
+        humidityPct: humidity,
+        predictedKwh: mKwh,
+        estimatedBillInr: mBill.grossBill,
+        subsidyBenefitInr: mBill.subsidyDeduction,
+        netPayableInr: mBill.netPayable,
+        gruhaJyothiStatus: mBill.subsidyStatus,
+        retainsBenefit: mBill.subsidyStatus !== "EXCEEDED"
+      });
+
+      totalAnnualKwh += mKwh;
+      totalAnnualGross += mBill.grossBill;
+      totalAnnualSubsidy += mBill.subsidyDeduction;
+      totalAnnualNet += mBill.netPayable;
+    }
+
     return {
       predictedKwh: predictedKwh,
       grossBillInr: billing.grossBill,
@@ -380,7 +446,12 @@ const ApiClient = {
       budgetUtilizationPct: utilPct,
       budgetMarginInr: marginInr,
       budgetStatus: bStatus,
-      budgetWarningMessage: bWarning
+      budgetWarningMessage: bWarning,
+      upcoming12Months: upcomingList,
+      totalAnnualProjectedKwh: Math.round(totalAnnualKwh * 10.0) / 10.0,
+      totalAnnualEstimatedBillInr: Math.round(totalAnnualGross * 100.0) / 100.0,
+      totalAnnualSubsidyBenefitInr: Math.round(totalAnnualSubsidy * 100.0) / 100.0,
+      totalAnnualNetPayableInr: Math.round(totalAnnualNet * 100.0) / 100.0
     };
   },
 

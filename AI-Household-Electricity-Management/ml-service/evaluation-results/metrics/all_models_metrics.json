@@ -2,113 +2,113 @@
     "Linear Regression": {
         "model_name": "Linear Regression",
         "train_metrics": {
-            "MAE": 17.6881,
-            "MSE": 529.4306,
-            "RMSE": 23.0094,
-            "R2": 0.927
+            "MAE": 14.9648,
+            "MSE": 413.6001,
+            "RMSE": 20.3372,
+            "R2": 0.9322
         },
         "test_metrics": {
-            "MAE": 17.1591,
-            "MSE": 540.384,
-            "RMSE": 23.2462,
-            "R2": 0.9253
+            "MAE": 14.8626,
+            "MSE": 461.7486,
+            "RMSE": 21.4883,
+            "R2": 0.928
         },
-        "training_time_seconds": 0.007811546325683594
+        "training_time_seconds": 0.03533124923706055
     },
     "Decision Tree": {
         "model_name": "Decision Tree",
         "train_metrics": {
-            "MAE": 0.5118,
-            "MSE": 9.7559,
-            "RMSE": 3.1234,
-            "R2": 0.9987
+            "MAE": 0.417,
+            "MSE": 7.3973,
+            "RMSE": 2.7198,
+            "R2": 0.9988
         },
         "test_metrics": {
-            "MAE": 17.4717,
-            "MSE": 698.7053,
-            "RMSE": 26.433,
-            "R2": 0.9035
+            "MAE": 14.6514,
+            "MSE": 572.5372,
+            "RMSE": 23.9278,
+            "R2": 0.9107
         },
-        "training_time_seconds": 0.033846139907836914
+        "training_time_seconds": 0.06355881690979004
     },
     "Random Forest": {
         "model_name": "Random Forest",
         "train_metrics": {
-            "MAE": 5.934,
-            "MSE": 74.7555,
-            "RMSE": 8.6461,
-            "R2": 0.9897
+            "MAE": 4.6038,
+            "MSE": 51.8876,
+            "RMSE": 7.2033,
+            "R2": 0.9915
         },
         "test_metrics": {
-            "MAE": 14.6269,
-            "MSE": 394.5442,
-            "RMSE": 19.8631,
-            "R2": 0.9455
+            "MAE": 12.0021,
+            "MSE": 361.5995,
+            "RMSE": 19.0158,
+            "R2": 0.9436
         },
-        "training_time_seconds": 0.4627397060394287
+        "training_time_seconds": 0.5879135131835938
     },
     "XGBoost": {
         "model_name": "XGBoost",
         "train_metrics": {
-            "MAE": 5.8734,
-            "MSE": 70.4947,
-            "RMSE": 8.3961,
-            "R2": 0.9903
+            "MAE": 4.9743,
+            "MSE": 55.5624,
+            "RMSE": 7.454,
+            "R2": 0.9909
         },
         "test_metrics": {
-            "MAE": 15.658,
-            "MSE": 470.3898,
-            "RMSE": 21.6885,
-            "R2": 0.935
+            "MAE": 12.6157,
+            "MSE": 403.9289,
+            "RMSE": 20.098,
+            "R2": 0.937
         },
-        "training_time_seconds": 1.7431461811065674
+        "training_time_seconds": 2.0380637645721436
     },
     "KNN": {
         "model_name": "KNN",
         "train_metrics": {
-            "MAE": 14.0167,
-            "MSE": 372.8131,
-            "RMSE": 19.3084,
-            "R2": 0.9486
+            "MAE": 11.0032,
+            "MSE": 282.9161,
+            "RMSE": 16.8201,
+            "R2": 0.9536
         },
         "test_metrics": {
-            "MAE": 16.4546,
-            "MSE": 474.7857,
-            "RMSE": 21.7896,
-            "R2": 0.9344
+            "MAE": 13.6312,
+            "MSE": 440.8667,
+            "RMSE": 20.9968,
+            "R2": 0.9313
         },
-        "training_time_seconds": 0.0018076896667480469
+        "training_time_seconds": 0.0017387866973876953
     },
     "LSTM": {
         "model_name": "LSTM",
         "train_metrics": {
-            "MAE": 14.1469,
-            "MSE": 415.7468,
-            "RMSE": 20.3899,
-            "R2": 0.9427
+            "MAE": 10.8705,
+            "MSE": 293.1903,
+            "RMSE": 17.1228,
+            "R2": 0.9519
         },
         "test_metrics": {
-            "MAE": 14.9951,
-            "MSE": 401.8194,
-            "RMSE": 20.0454,
-            "R2": 0.9445
+            "MAE": 12.3676,
+            "MSE": 363.6866,
+            "RMSE": 19.0706,
+            "R2": 0.9433
         },
-        "training_time_seconds": 31.423079252243042
+        "training_time_seconds": 39.155409812927246
     },
     "Temporal Fusion Transformer": {
         "model_name": "Temporal Fusion Transformer",
         "train_metrics": {
-            "MAE": 14.0979,
-            "MSE": 412.7334,
-            "RMSE": 20.3158,
-            "R2": 0.9431
+            "MAE": 11.7891,
+            "MSE": 324.049,
+            "RMSE": 18.0014,
+            "R2": 0.9469
         },
         "test_metrics": {
-            "MAE": 15.1632,
-            "MSE": 427.077,
-            "RMSE": 20.6658,
-            "R2": 0.941
+            "MAE": 12.6122,
+            "MSE": 368.1138,
+            "RMSE": 19.1863,
+            "R2": 0.9426
         },
-        "training_time_seconds": 36.004749059677124
+        "training_time_seconds": 54.53854560852051
     }
 }

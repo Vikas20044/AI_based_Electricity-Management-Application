@@ -155,16 +155,46 @@ public class ForecastService {
         double totalAnnualSubsidy = 0.0;
         double totalAnnualNet = 0.0;
 
+        double prevMonthKwh = currentMonthDto.getPredictedKwh();
         for (int i = 1; i <= 12; i++) {
             LocalDate futureDate = today.plusMonths(i);
             String monthLabel = futureDate.format(monthFormatter);
             int monthNum = futureDate.getMonthValue();
 
-            MonthlyForecastDto monthDto = buildMonthlyForecast(
+            double futureKwh;
+            try {
+                MLFeaturePayload futurePayload = new MLFeaturePayload();
+                futurePayload.setState(hh.getState() != null ? hh.getState() : "Karnataka");
+                futurePayload.setDistrict(hh.getDistrict() != null ? hh.getDistrict() : "Tumakuru");
+                futurePayload.setAreaType(hh.getAreaType() != null ? hh.getAreaType() : "Urban");
+                futurePayload.setDwellingType(hh.getDwellingType() != null ? hh.getDwellingType() : "2 BHK");
+                futurePayload.setHouseholdSize(hh.getHouseholdSize() != null ? hh.getHouseholdSize() : 4);
+                futurePayload.setYear(futureDate.getYear());
+                futurePayload.setMonthNumber(monthNum);
+                futurePayload.setPreviousMonthConsumptionKwh(prevMonthKwh);
+                futurePayload.setSanctionedLoadKw(hh.getSanctionedLoadKw() != null ? hh.getSanctionedLoadKw() : 2.0);
+                futurePayload.setApplianceCount(applianceCount > 0 ? applianceCount : 4);
+                futurePayload.setTotalApplianceLoadKw(totalApplianceLoadKw > 0 ? totalApplianceLoadKw : 1.5);
+                futurePayload.setApplianceMonthlyKwh(totalApplianceKwh > 0 ? totalApplianceKwh : pastUnits);
+                futurePayload.setHeavyApplianceFlag(heavyFlag);
+                futurePayload.setCurrentPartialConsumptionKwh(null);
+                futurePayload.setDaysElapsed(null);
+
+                MLPredictionResponse futureMlResp = mlServiceClient.requestPrediction(futurePayload);
+                if (futureMlResp != null && futureMlResp.getPredictedConsumptionKwh() != null && futureMlResp.getPredictedConsumptionKwh() > 0) {
+                    futureKwh = futureMlResp.getPredictedConsumptionKwh();
+                } else {
+                    futureKwh = calculateSeasonalKwh(mlBaseKwh, i, monthNum);
+                }
+            } catch (Exception ex) {
+                futureKwh = calculateSeasonalKwh(mlBaseKwh, i, monthNum);
+            }
+
+            MonthlyForecastDto monthDto = buildMonthlyForecastWithKwh(
                     monthLabel,
                     i,
                     monthNum,
-                    mlBaseKwh,
+                    futureKwh,
                     hh
             );
 
@@ -173,6 +203,8 @@ public class ForecastService {
             totalAnnualGross += monthDto.getEstimatedBillInr();
             totalAnnualSubsidy += monthDto.getSubsidyBenefitInr();
             totalAnnualNet += monthDto.getNetPayableInr();
+
+            prevMonthKwh = futureKwh;
         }
 
         double dailyBurnRate = round(partial / days);
@@ -253,41 +285,39 @@ public class ForecastService {
 
     private MonthlyForecastDto buildMonthlyForecast(String monthLabel, int monthIndex, int monthNum,
                                                     double baseKwh, Household hh) {
+        double predictedKwh = (monthIndex == 0) ? round(baseKwh) : calculateSeasonalKwh(baseKwh, monthIndex, monthNum);
+        return buildMonthlyForecastWithKwh(monthLabel, monthIndex, monthNum, predictedKwh, hh);
+    }
+
+    private MonthlyForecastDto buildMonthlyForecastWithKwh(String monthLabel, int monthIndex, int monthNum,
+                                                           double predictedKwh, Household hh) {
         String season;
         double temp;
         double humidity;
-        double seasonalMultiplier;
 
         if (monthNum >= 3 && monthNum <= 5) {
             season = "Summer";
             temp = 33.5;
             humidity = 48.0;
-            seasonalMultiplier = 1.15;
         } else if (monthNum >= 6 && monthNum <= 9) {
             season = "Monsoon";
             temp = 26.0;
             humidity = 78.0;
-            seasonalMultiplier = 0.94;
         } else if (monthNum >= 10 && monthNum <= 11) {
             season = "Post-monsoon";
             temp = 27.5;
             humidity = 65.0;
-            seasonalMultiplier = 0.98;
         } else {
             season = "Winter";
             temp = 23.5;
             humidity = 54.0;
-            seasonalMultiplier = 0.93;
         }
-
-        double trendFactor = 1.0 + (monthIndex * 0.003);
-        double predictedKwh = monthIndex == 0 ? round(baseKwh) : round(baseKwh * seasonalMultiplier * trendFactor);
 
         double entitledUnits = hh.getEntitledUnitsKwh() != null ? hh.getEntitledUnitsKwh() : 175.0;
         double sanctionedLoad = hh.getSanctionedLoadKw() != null ? hh.getSanctionedLoadKw() : 2.0;
 
         BillingService.BillCalculation calc = billingService.calculateBill(
-                predictedKwh,
+                round(predictedKwh),
                 sanctionedLoad,
                 entitledUnits,
                 Boolean.TRUE.equals(hh.getSchemeRegistered())
@@ -301,13 +331,28 @@ public class ForecastService {
                 season,
                 temp,
                 humidity,
-                predictedKwh,
+                round(predictedKwh),
                 calc.getGrossBill(),
                 calc.getSubsidyDeduction(),
                 calc.getNetPayable(),
                 calc.getSubsidyStatus(),
                 retains
         );
+    }
+
+    private double calculateSeasonalKwh(double baseKwh, int monthIndex, int monthNum) {
+        double seasonalMultiplier;
+        if (monthNum >= 3 && monthNum <= 5) {
+            seasonalMultiplier = 1.15;
+        } else if (monthNum >= 6 && monthNum <= 9) {
+            seasonalMultiplier = 0.94;
+        } else if (monthNum >= 10 && monthNum <= 11) {
+            seasonalMultiplier = 0.98;
+        } else {
+            seasonalMultiplier = 0.93;
+        }
+        double trendFactor = 1.0 + (monthIndex * 0.003);
+        return round(baseKwh * seasonalMultiplier * trendFactor);
     }
 
     private double round(double val) {

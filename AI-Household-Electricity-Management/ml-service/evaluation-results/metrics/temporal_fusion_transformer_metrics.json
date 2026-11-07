@@ -1,16 +1,16 @@
 {
     "model_name": "Temporal Fusion Transformer",
     "train_metrics": {
-        "MAE": 14.0979,
-        "MSE": 412.7334,
-        "RMSE": 20.3158,
-        "R2": 0.9431
+        "MAE": 11.7891,
+        "MSE": 324.049,
+        "RMSE": 18.0014,
+        "R2": 0.9469
     },
     "test_metrics": {
-        "MAE": 15.1632,
-        "MSE": 427.077,
-        "RMSE": 20.6658,
-        "R2": 0.941
+        "MAE": 12.6122,
+        "MSE": 368.1138,
+        "RMSE": 19.1863,
+        "R2": 0.9426
     },
-    "training_time_seconds": 36.004749059677124
+    "training_time_seconds": 54.53854560852051
 }

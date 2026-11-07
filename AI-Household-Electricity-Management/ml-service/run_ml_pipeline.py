@@ -110,13 +110,16 @@ def run_pipeline():
     print("=" * 80)
 
     best_name, best_summary = identify_best_model(comparison_df)
-    print(f"\n[+] Selected Best-Performing Model on Test Dataset: >>> {best_name} <<<")
+    print(f"\n[+] Highest Test R^2 Metric Model: >>> {best_name} <<<")
     print(f"    Test R^2 Score: {best_summary['Test_R2']:.4f}")
     print(f"    Test RMSE:     {best_summary['Test_RMSE']:.4f} kWh")
     print(f"    Test MAE:      {best_summary['Test_MAE']:.4f} kWh")
 
-    best_model_obj = trained_models[best_name]["model"]
-    save_best_model(best_model_obj, trained_models_dir)
+    # User explicitly requested LSTM as the model for the electricity management application
+    app_model_name = "LSTM" if "LSTM" in trained_models else best_name
+    print(f"[+] Designated Production Application Model: >>> {app_model_name} <<<")
+    app_model_obj = trained_models[app_model_name]["model"]
+    save_best_model(app_model_obj, trained_models_dir)
 
     save_evaluation_results(
         comparison_df=comparison_df,
