@@ -8,10 +8,10 @@ spring:
     name: electricity-management-backend
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:electricity_db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}
-    username: ${SPRING_DATASOURCE_USERNAME:sa}
-    password: ${SPRING_DATASOURCE_PASSWORD:}
-    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/electricity_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:vikas}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.postgresql.Driver}
 
   jpa:
     hibernate:
@@ -20,15 +20,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   h2:
     console:
-      enabled: true
-      path: /h2-console
+      enabled: false
 
   sql:
     init:
-      mode: always
+      mode: never
 
 ml-service:
   base-url: ${ML_SERVICE_URL:http://localhost:8000}

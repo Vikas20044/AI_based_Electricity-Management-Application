@@ -1,0 +1,9 @@
+# Compiled class files and executables
+target/
+*.jar
+*.class
+
+# IDE specific files
+.idea/
+*.iml
+.vscode/
