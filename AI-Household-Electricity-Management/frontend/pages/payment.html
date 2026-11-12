@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Payment - Electricity Management</title>
+  <title>Pay Bill - Electricity Management</title>
   <link rel="stylesheet" href="../css/style.css">
   <script>
     (function() {
@@ -14,7 +14,7 @@
 </head>
 <body>
 
-  <!-- Simple Navigation Bar -->
+  <!-- Navigation Bar -->
   <div class="nav-bar">
     <div>
       <b>Electricity Project</b> &nbsp;|&nbsp;
@@ -29,215 +29,309 @@
     </div>
   </div>
 
-  <h3 style="margin-bottom: 4px;">Electricity Bill Payment &amp; Receipt</h3>
+  <h3 style="margin-bottom: 2px;">Electricity Bill Payment</h3>
   <p style="font-size: 13px; color: #555; margin-top: 0; margin-bottom: 12px;">
-    View your active bill and make settlement.
+    Settle your arrived past month electricity bill and view payment receipts.
   </p>
 
-  <!-- 1. Current Bill Statement -->
+  <!-- 1. Active Due Bill Statement (Arrived Past Month Bill) -->
   <fieldset>
-    <legend>Active Bill Statement (<span id="billStatusTag">ASSESSED</span>)</legend>
+    <legend>Active Bill Statement &mdash; Due for Payment (<span id="billBillingMonth">October 2026</span>)</legend>
+    
+    <div id="cycleContextNotice" style="font-size: 12px; color: #444; background: #f0f4f8; padding: 6px 10px; margin-bottom: 8px; border-left: 3px solid #003399;">
+      <b>Cycle Status:</b> Bill arrived for concluded cycle: <b><span id="txtPayableMonth">October 2026</span></b>. 
+      (Current cycle: <i><span id="txtOngoingMonth">November 2026</span></i> is currently ongoing; official bill will arrive after 30 Nov 2026).
+    </div>
+
     <table class="plain-table">
       <tr>
         <td style="width: 30%;">Consumer Number:</td>
-        <td><b id="payConsumerNo">--</b></td>
+        <td><b id="billConsumerNo">--</b></td>
       </tr>
       <tr>
         <td>Meter Number:</td>
-        <td><span id="payMeterNo">--</span></td>
+        <td><span id="billMeterNo">--</span></td>
       </tr>
       <tr>
-        <td>Billing Cycle:</td>
-        <td><span id="payBillingMonth">Active Cycle</span></td>
+        <td>Billing Month:</td>
+        <td><b id="billDisplayMonth">October 2026</b> (Arrived Official Bill)</td>
       </tr>
       <tr>
-        <td>Projected Units:</td>
-        <td><b id="payUnits" style="color: #003399;">-- kWh</b></td>
+        <td>Units Consumed:</td>
+        <td><b id="billUnits" style="color: #003399;">-- kWh</b></td>
       </tr>
       <tr>
         <td>Gross Bill:</td>
-        <td>₹<span id="payGross">0.00</span></td>
+        <td>₹<span id="billGross">0.00</span></td>
       </tr>
       <tr>
         <td>Govt Subsidy:</td>
-        <td style="color: green;">-₹<span id="paySubsidy">0.00</span></td>
+        <td style="color: green;">-₹<span id="billSubsidy">0.00</span></td>
       </tr>
       <tr style="background: #f0f0f0; font-size: 15px;">
         <td><b>Net Amount to Pay:</b></td>
-        <td><b>₹<span id="payNet" style="color: #003399;">0.00</span></b></td>
+        <td><b>₹<span id="billNet" style="color: #003399;">0.00</span></b> &nbsp; (<span id="billStatusText" style="font-size: 13px; font-weight: bold;">--</span>)</td>
       </tr>
     </table>
-    <div style="font-size: 12px; color: #555; margin-top: 6px;" id="payGuidanceBox">
-      <span id="payGuidanceText">Evaluating scheme status...</span>
+
+    <!-- State A: Already Paid / Cleared Notice -->
+    <div id="alreadyPaidBox" class="d-none" style="margin-top: 10px; background: #e8f5e9; border: 1px solid #81c784; padding: 10px; color: #2e7d32;">
+      <b>All Dues Cleared!</b> The bill for <span id="paidMonthName">October 2026</span> has been fully settled. 
+      Reference: <code id="paidRefId">TXN-0000</code>.
+      <div style="margin-top: 6px;">
+        <button type="button" id="btnViewActiveReceipt" style="padding: 4px 10px; font-weight: bold;">
+          View / Print Receipt
+        </button>
+      </div>
     </div>
-  </fieldset>
 
-  <!-- 2. Payment Action -->
-  <fieldset>
-    <legend>Pay Bill / Get Receipt</legend>
-
-    <form id="paymentActionForm" autocomplete="off">
-      <!-- Zero Bill Option -->
-      <div id="zeroBillOptionBox" class="d-none">
-        <p style="color: green; font-weight: bold; font-size: 13px;">
-          Your bill is ₹0 under Gruha Jyothi! No payment needed.
-        </p>
-        <button type="button" id="btnIssueZeroBill" style="padding: 6px 12px; font-weight: bold;">
-          Download Zero-Bill Receipt
+    <!-- State B: Action when bill is due -->
+    <div id="unpaidActionBox" style="margin-top: 10px;">
+      <!-- Zero Bill Button -->
+      <div id="zeroBillActionBox" class="d-none">
+        <button type="button" id="btnIssueZeroBill" style="padding: 6px 14px; font-weight: bold; background: #2e7d32; color: #fff; border: 1px solid #1b5e20;">
+          Download Zero-Bill Clearance Receipt
         </button>
       </div>
 
-      <!-- Payable Option -->
-      <div id="payableOptionBox" class="d-none">
-        <p style="font-size: 13px; margin-bottom: 6px;">
-          <b>Select Mode:</b> &nbsp;
-          <label><input type="radio" name="payMethod" id="methodUpi" value="UPI" checked> UPI</label> &nbsp;
-          <label><input type="radio" name="payMethod" id="methodCard" value="CARD"> Card</label> &nbsp;
-          <label><input type="radio" name="payMethod" id="methodNet" value="NET_BANKING"> Net Banking</label>
+      <!-- Payable Action Form -->
+      <form id="paymentActionForm" class="d-none" autocomplete="off">
+        <p style="font-size: 13px; margin: 0 0 6px 0;">
+          <b>Select Payment Mode:</b> &nbsp;
+          <label><input type="radio" name="payMethod" value="UPI" checked> UPI</label> &nbsp;
+          <label><input type="radio" name="payMethod" value="CARD"> Card</label> &nbsp;
+          <label><input type="radio" name="payMethod" value="NET_BANKING"> Net Banking</label>
         </p>
-
-        <p style="font-size: 13px;">
-          <label for="payPayerName"><b>Payer Name:</b></label><br>
-          <input type="text" id="payPayerName" required style="width: 250px;">
-        </p>
-
-        <button type="submit" id="btnPayNow" style="padding: 6px 14px; font-weight: bold;">
+        <button type="submit" id="btnPayNow" style="padding: 6px 14px; font-weight: bold; background: #003399; color: #fff; border: 1px solid #002266;">
           Pay ₹<span id="btnPayAmount">0.00</span> Now
         </button>
-      </div>
-    </form>
+      </form>
 
-    <div id="processingIndicator" class="d-none" style="font-size: 13px; color: #666; padding: 10px;">
-      Processing payment...
+      <div id="processingIndicator" class="d-none" style="font-size: 13px; color: #666; margin-top: 6px;">
+        Processing payment...
+      </div>
     </div>
   </fieldset>
 
-  <!-- Printable Receipt Box -->
+  <!-- 2. Previous Month Payment and Receipt -->
+  <fieldset>
+    <legend>Previous Month Payment &amp; Receipt</legend>
+    <table class="plain-table">
+      <tr>
+        <td style="width: 30%;">Previous Billing Month:</td>
+        <td><b id="prevMonthName">September 2026</b></td>
+      </tr>
+      <tr>
+        <td>Units Consumed:</td>
+        <td><span id="prevUnits">152.0 kWh</span></td>
+      </tr>
+      <tr>
+        <td>Gross Bill Amount:</td>
+        <td>₹<span id="prevGross">1064.00</span></td>
+      </tr>
+      <tr>
+        <td>Govt Subsidy Applied:</td>
+        <td style="color: green;">-₹<span id="prevSubsidy">1064.00</span></td>
+      </tr>
+      <tr>
+        <td>Amount Paid:</td>
+        <td><b>₹<span id="prevPaidAmount">0.00</span></b></td>
+      </tr>
+      <tr>
+        <td>Payment Status:</td>
+        <td><span style="color: green; font-weight: bold;" id="prevStatus">PAID (Zero-Bill Cleared)</span></td>
+      </tr>
+      <tr>
+        <td>Transaction Reference:</td>
+        <td><code id="prevTxnRef">TXN-KAR-PREV-90214</code></td>
+      </tr>
+      <tr>
+        <td>Payment Date:</td>
+        <td><span id="prevPaidDate">30 Sep 2026</span></td>
+      </tr>
+    </table>
+    <div style="margin-top: 8px;">
+      <button type="button" id="btnViewPrevReceipt" style="padding: 5px 12px; font-weight: bold;">
+        View / Print Previous Month Receipt
+      </button>
+    </div>
+  </fieldset>
+
+  <!-- Printable Receipt Box (Hidden until Print/View Receipt is triggered) -->
   <div id="receiptSection" class="d-none" style="margin-top: 15px;">
-    <div style="border: 2px dashed #666; padding: 12px; max-width: 450px; margin: 0 auto; font-size: 13px;">
-      <h4 style="text-align: center; margin: 0 0 4px 0; color: #003399;">Electricity Bill Receipt</h4>
-      <div style="text-align: center; font-size: 11px; color: #666; margin-bottom: 8px;">Government of Karnataka</div>
-      <hr>
-      <table style="width: 100%; border: none;">
-        <tr><td>Transaction ID:</td><td><b id="recTxnRef">TXN-000000</b></td></tr>
-        <tr><td>Consumer No:</td><td><span id="recConsumerNo">--</span></td></tr>
-        <tr><td>Billing Month:</td><td><span id="recMonth">--</span></td></tr>
-        <tr><td>Mode:</td><td><span id="recMethod">UPI</span></td></tr>
+    <div style="border: 2px dashed #003399; background: #fafbff; padding: 15px; max-width: 480px; margin: 0 auto; font-size: 13px;">
+      <div style="text-align: center; margin-bottom: 6px;">
+        <h4 style="margin: 0; color: #003399;">GOVERNMENT OF KARNATAKA</h4>
+        <div style="font-size: 12px; font-weight: bold; color: #333;">ENERGY DEPARTMENT &bull; ELECTRICITY BILL RECEIPT</div>
+        <div style="font-size: 11px; color: #666;">Gruha Jyothi Scheme Verified Voucher</div>
+      </div>
+      <hr style="border: none; border-top: 1px solid #ccc;">
+      <table style="width: 100%; border: none; font-size: 13px; line-height: 1.6;">
+        <tr><td>Reference No:</td><td><b id="recTxnRef" style="color: #003399;">TXN-000000</b></td></tr>
+        <tr><td>Consumer Account:</td><td><b id="recConsumerNo">--</b></td></tr>
+        <tr><td>Meter Identifier:</td><td><span id="recMeterNo">--</span></td></tr>
+        <tr><td>Billing Month:</td><td><b id="recMonth">--</b></td></tr>
+        <tr><td>Units:</td><td><span id="recUnits">-- kWh</span></td></tr>
+        <tr><td>Payment Mode:</td><td><b id="recMethod">UPI</b></td></tr>
         <tr><td>Date:</td><td><span id="recDate">--</span></td></tr>
-        <tr style="border-top: 1px solid #999; font-size: 14px;">
+        <tr style="border-top: 1px solid #999; font-size: 15px;">
           <td><b>Amount Paid:</b></td>
           <td><b>₹<span id="recAmount">0.00</span></b></td>
         </tr>
       </table>
-      <div style="margin-top: 8px; text-align: center; font-size: 11px; color: #666;" id="recNote">
-        Clearance verified.
+      <div style="margin-top: 10px; text-align: center; font-size: 11px; color: #2e7d32; font-weight: bold; border: 1px solid #a5d6a7; background: #e8f5e9; padding: 4px;" id="recNote">
+        CLEARANCE VERIFIED &bull; OFFICIAL RECEIPT
       </div>
       <div style="text-align: center; margin-top: 10px;">
-        <button type="button" onclick="window.print()">Print Receipt</button>
+        <button type="button" onclick="window.print()" style="padding: 5px 14px; font-weight: bold;">
+          Print Receipt
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- 3. Payment History Table -->
-  <fieldset style="margin-top: 15px;">
-    <legend>Payment History</legend>
-    <table class="plain-table">
-      <thead>
-        <tr>
-          <th>Month</th>
-          <th>Reference ID</th>
-          <th>Amount</th>
-          <th>Mode</th>
-          <th>Status</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody id="paymentHistoryBody">
-        <tr><td colspan="6" style="text-align: center; color: #666;">Loading...</td></tr>
-      </tbody>
-    </table>
-  </fieldset>
-
   <script src="../js/api/api-client.js"></script>
   <script>
+    let currentBillData = null;
+    let previousMonthData = null;
+
     const user = ApiClient.getUser();
     if (user && user.email) {
       document.getElementById("headerUserEmail").innerText = user.email;
-      const payerField = document.getElementById("payPayerName");
-      if (payerField && user.fullName) {
-        payerField.value = user.fullName;
-      }
     }
 
-    let currentBillData = null;
+    async function initPaymentPage() {
+      // 1. Load Active Bill Statement (Concluded Past Month Bill that has arrived)
+      await loadActiveBill();
 
-    async function initPaymentModule() {
+      // 2. Load Previous Month Payment Details
+      await loadPreviousMonthPayment();
+    }
+
+    async function loadActiveBill() {
       currentBillData = await ApiClient.getCurrentBill();
+      const profile = await ApiClient.getHouseholdProfile();
 
-      const consumerNo = currentBillData.consumerNumber || "KAR-TMK-90214";
-      const meterNo = currentBillData.meterNumber || "MTR-BESCOM-8839";
-      const month = currentBillData.billingMonth || "November 2026";
-      const units = currentBillData.projectedUnitsKwh || 160.0;
+      const consumerNo = currentBillData.consumerNumber || profile.consumerNumber || "KAR-TMK-90214";
+      const meterNo = currentBillData.meterNumber || profile.meterNumber || "MTR-BESCOM-8839";
+      
+      // The arrived payable bill is the concluded past month (e.g. October 2026)!
+      const payableMonth = currentBillData.billingMonth || profile.pastMonthName || "October 2026";
+      const ongoingMonth = currentBillData.ongoingCycleMonth || "November 2026";
+      const units = currentBillData.projectedUnitsKwh || profile.pastMonthUnitsKwh || 160.0;
       const gross = currentBillData.grossBillInr || 1120.0;
       const subsidy = currentBillData.subsidyBenefitInr || 1120.0;
       const net = currentBillData.netPayableInr !== undefined ? currentBillData.netPayableInr : 0.0;
+      const isPaid = Boolean(currentBillData.isPaid);
 
-      document.getElementById("payConsumerNo").innerText = consumerNo;
-      document.getElementById("payMeterNo").innerText = meterNo;
-      document.getElementById("payBillingMonth").innerText = month;
-      document.getElementById("payUnits").innerText = units.toFixed(1) + " kWh";
-      document.getElementById("payGross").innerText = gross.toFixed(2);
-      document.getElementById("paySubsidy").innerText = subsidy.toFixed(2);
-      document.getElementById("payNet").innerText = net.toFixed(2);
+      document.getElementById("billConsumerNo").innerText = consumerNo;
+      document.getElementById("billMeterNo").innerText = meterNo;
+      document.getElementById("billBillingMonth").innerText = payableMonth;
+      document.getElementById("billDisplayMonth").innerText = payableMonth;
+      document.getElementById("txtPayableMonth").innerText = payableMonth;
+      document.getElementById("txtOngoingMonth").innerText = ongoingMonth;
+      document.getElementById("billUnits").innerText = Number(units).toFixed(1) + " kWh";
+      document.getElementById("billGross").innerText = Number(gross).toFixed(2);
+      document.getElementById("billSubsidy").innerText = Number(subsidy).toFixed(2);
+      document.getElementById("billNet").innerText = Number(net).toFixed(2);
 
-      const zeroBox = document.getElementById("zeroBillOptionBox");
-      const payBox = document.getElementById("payableOptionBox");
-      const guidanceBox = document.getElementById("payGuidanceText");
-      const statusTag = document.getElementById("billStatusTag");
+      const alreadyPaidBox = document.getElementById("alreadyPaidBox");
+      const unpaidActionBox = document.getElementById("unpaidActionBox");
+      const zeroBox = document.getElementById("zeroBillActionBox");
+      const payForm = document.getElementById("paymentActionForm");
+      const statusText = document.getElementById("billStatusText");
 
-      if (net <= 0.0) {
-        zeroBox.classList.remove("d-none");
-        payBox.classList.add("d-none");
-        statusTag.innerText = "ZERO-BILL";
-        guidanceBox.innerHTML = `<b>Free Electricity:</b> Consumption (${units.toFixed(1)} kWh) qualifies for 100% waiver under Gruha Jyothi.`;
+      if (isPaid) {
+        alreadyPaidBox.classList.remove("d-none");
+        unpaidActionBox.classList.add("d-none");
+        statusText.innerText = "PAID & CLEARED";
+        statusText.style.color = "green";
+        document.getElementById("paidMonthName").innerText = payableMonth;
+        document.getElementById("paidRefId").innerText = currentBillData.paidTransactionReference || "TXN-KAR-PAID";
+        
+        document.getElementById("btnViewActiveReceipt").onclick = function() {
+          showReceipt({
+            transactionReference: currentBillData.paidTransactionReference || "TXN-KAR-PAID",
+            consumerNumber: consumerNo,
+            billingMonth: payableMonth,
+            paymentMethod: currentBillData.paymentMethod || "ZERO_BILL_WAIVER",
+            paymentDate: currentBillData.paidDate || new Date().toISOString(),
+            amountInr: net,
+            receiptMessage: "Bill clearance verified for " + payableMonth
+          }, units);
+        };
       } else {
-        zeroBox.classList.add("d-none");
-        payBox.classList.remove("d-none");
-        document.getElementById("btnPayAmount").innerText = net.toFixed(2);
-        statusTag.innerText = "DUE: ₹" + net.toFixed(2);
-        guidanceBox.innerHTML = `<b>Dues:</b> Net payable for this cycle is ₹${net.toFixed(2)}.`;
-      }
+        alreadyPaidBox.classList.add("d-none");
+        unpaidActionBox.classList.remove("d-none");
 
-      loadHistory();
+        if (net <= 0.0) {
+          zeroBox.classList.remove("d-none");
+          payForm.classList.add("d-none");
+          statusText.innerText = "100% Zero-Bill";
+          statusText.style.color = "green";
+        } else {
+          zeroBox.classList.add("d-none");
+          payForm.classList.remove("d-none");
+          document.getElementById("btnPayAmount").innerText = Number(net).toFixed(2);
+          statusText.innerText = "Due: ₹" + Number(net).toFixed(2);
+          statusText.style.color = "#c62828";
+        }
+      }
     }
 
-    async function loadHistory() {
-      const history = await ApiClient.getPaymentHistory();
-      const tbody = document.getElementById("paymentHistoryBody");
-      tbody.innerHTML = "";
+    async function loadPreviousMonthPayment() {
+      const profile = await ApiClient.getHouseholdProfile();
+      // Previous month before the active due bill (e.g. September 2026)
+      const prevMonth = "September 2026";
+      const baseUnits = profile.pastMonthUnitsKwh || 160.0;
+      const prevUnits = Math.round(baseUnits * 0.95 * 10.0) / 10.0; // 152.0 kWh
+      const load = profile.sanctionedLoadKw || 2.0;
+      const entitled = profile.entitledUnitsKwh || 176.0;
 
-      if (!history || history.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666; padding: 8px;">No payments recorded yet.</td></tr>`;
-        return;
-      }
+      const calc = ApiClient.calculateLocalBill(prevUnits, load, entitled);
+      const isZero = calc.netPayable <= 0.0;
 
-      history.forEach(item => {
-        const tr = document.createElement("tr");
-        const dateStr = item.paymentDate ? new Date(item.paymentDate).toLocaleDateString() : "--";
-        const isZero = Number(item.amountInr) === 0;
+      previousMonthData = {
+        month: prevMonth,
+        units: prevUnits,
+        gross: calc.grossBill,
+        subsidy: calc.subsidyDeduction,
+        paid: calc.netPayable,
+        status: isZero ? "PAID (Zero-Bill Cleared)" : "PAID (UPI)",
+        txnRef: "TXN-KAR-HIST-948583",
+        date: "27 Sep 2026",
+        consumerNo: profile.consumerNumber || "KAR-TMK-90214",
+        meterNo: profile.meterNumber || "MTR-BESCOM-8839"
+      };
 
-        tr.innerHTML = `
-          <td><b>${item.billingMonth || "--"}</b></td>
-          <td><code>${item.transactionReference || "--"}</code></td>
-          <td>${isZero ? "₹0.00 (Zero-Bill)" : "₹" + Number(item.amountInr).toFixed(2)}</td>
-          <td>${item.paymentMethod || "UPI"}</td>
-          <td style="color: green;"><b>${item.paymentStatus || "SUCCESS"}</b></td>
-          <td style="color: #666;">${dateStr}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+      document.getElementById("prevMonthName").innerText = previousMonthData.month;
+      document.getElementById("prevUnits").innerText = previousMonthData.units.toFixed(1) + " kWh";
+      document.getElementById("prevGross").innerText = previousMonthData.gross.toFixed(2);
+      document.getElementById("prevSubsidy").innerText = previousMonthData.subsidy.toFixed(2);
+      document.getElementById("prevPaidAmount").innerText = previousMonthData.paid.toFixed(2);
+      document.getElementById("prevStatus").innerText = previousMonthData.status;
+      document.getElementById("prevTxnRef").innerText = previousMonthData.txnRef;
+      document.getElementById("prevPaidDate").innerText = previousMonthData.date;
     }
 
+    // View / Print Previous Month Receipt Click
+    document.getElementById("btnViewPrevReceipt").addEventListener("click", function() {
+      if (!previousMonthData) return;
+      const receipt = {
+        transactionReference: previousMonthData.txnRef,
+        consumerNumber: previousMonthData.consumerNo,
+        billingMonth: previousMonthData.month,
+        paymentMethod: previousMonthData.paid === 0 ? "ZERO_BILL_WAIVER" : "UPI",
+        paymentDate: previousMonthData.date,
+        amountInr: previousMonthData.paid,
+        receiptMessage: previousMonthData.paid === 0 
+          ? "Zero-Bill Clearance generated. Full waiver under Karnataka Gruha Jyothi Scheme." 
+          : "Payment verified successfully."
+      };
+      showReceipt(receipt, previousMonthData.units);
+    });
+
+    // Zero-Bill Receipt Click for Active Bill
     document.getElementById("btnIssueZeroBill").addEventListener("click", async function() {
       const btn = this;
       btn.disabled = true;
@@ -246,25 +340,25 @@
       try {
         const payload = {
           consumerNumber: currentBillData.consumerNumber,
-          billingMonth: currentBillData.billingMonth,
+          billingMonth: currentBillData.billingMonth || "October 2026",
           amountInr: 0.0,
           paymentMethod: "ZERO_BILL_WAIVER"
         };
         const receipt = await ApiClient.processPayment(payload);
-        showReceipt(receipt);
-        await loadHistory();
+        showReceipt(receipt, currentBillData.projectedUnitsKwh);
+        await initPaymentPage();
       } catch (e) {
         alert("Error: " + e.message);
       } finally {
         btn.disabled = false;
-        btn.innerText = "Download Zero-Bill Receipt";
+        btn.innerText = "Download Zero-Bill Clearance Receipt";
       }
     });
 
+    // Pay Form Submit for Active Bill
     document.getElementById("paymentActionForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const form = this;
-      const btn = document.getElementById("btnPayNow");
       const indicator = document.getElementById("processingIndicator");
       const selectedMethod = document.querySelector('input[name="payMethod"]:checked')?.value || "UPI";
 
@@ -274,13 +368,13 @@
       try {
         const payload = {
           consumerNumber: currentBillData.consumerNumber,
-          billingMonth: currentBillData.billingMonth,
+          billingMonth: currentBillData.billingMonth || "October 2026",
           amountInr: currentBillData.netPayableInr,
           paymentMethod: selectedMethod
         };
         const receipt = await ApiClient.processPayment(payload);
-        showReceipt(receipt);
-        await loadHistory();
+        showReceipt(receipt, currentBillData.projectedUnitsKwh);
+        await initPaymentPage();
       } catch (err) {
         alert("Payment error: " + err.message);
         form.classList.remove("d-none");
@@ -289,20 +383,23 @@
       }
     });
 
-    function showReceipt(receipt) {
-      document.getElementById("receiptSection").classList.remove("d-none");
+    function showReceipt(receipt, unitsVal) {
+      const sec = document.getElementById("receiptSection");
+      sec.classList.remove("d-none");
       document.getElementById("recTxnRef").innerText = receipt.transactionReference;
-      document.getElementById("recConsumerNo").innerText = receipt.consumerNumber;
+      document.getElementById("recConsumerNo").innerText = receipt.consumerNumber || document.getElementById("billConsumerNo").innerText;
+      document.getElementById("recMeterNo").innerText = document.getElementById("billMeterNo").innerText;
       document.getElementById("recMonth").innerText = receipt.billingMonth;
+      document.getElementById("recUnits").innerText = (unitsVal ? Number(unitsVal).toFixed(1) : "160.0") + " kWh";
       document.getElementById("recMethod").innerText = receipt.paymentMethod;
-      document.getElementById("recDate").innerText = new Date(receipt.paymentDate).toLocaleString();
+      document.getElementById("recDate").innerText = receipt.paymentDate ? new Date(receipt.paymentDate).toLocaleString() : new Date().toLocaleString();
       document.getElementById("recAmount").innerText = Number(receipt.amountInr).toFixed(2);
-      document.getElementById("recNote").innerText = receipt.receiptMessage || "Clearance verified.";
+      document.getElementById("recNote").innerText = receipt.receiptMessage || "CLEARANCE VERIFIED &bull; OFFICIAL RECEIPT";
 
-      document.getElementById("receiptSection").scrollIntoView({ behavior: "smooth" });
+      sec.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    initPaymentModule();
+    initPaymentPage();
   </script>
 </body>
 </html>

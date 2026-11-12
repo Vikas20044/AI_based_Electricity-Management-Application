@@ -84,27 +84,56 @@ public class PaymentService {
 
     public Map<String, Object> getCurrentBillSummary(User user) {
         Household hh = householdService.getOrCreateDefaultHousehold(user);
-        ForecastResponseDto forecast = forecastService.generate12MonthForecast(user, hh.getCurrentPartialKwh(), hh.getDaysElapsed());
 
-        double predictedKwh = forecast.getCurrentMonth() != null ? forecast.getCurrentMonth().getPredictedKwh() : 160.0;
-        double grossBill = forecast.getCurrentMonth() != null ? forecast.getCurrentMonth().getEstimatedBillInr() : 1120.0;
-        double subsidy = forecast.getCurrentMonth() != null ? forecast.getCurrentMonth().getSubsidyBenefitInr() : 1120.0;
-        double netPayable = forecast.getCurrentMonth() != null ? forecast.getCurrentMonth().getNetPayableInr() : 0.0;
-        String status = forecast.getCurrentMonth() != null ? forecast.getCurrentMonth().getGruhaJyothiStatus() : "ELIGIBLE";
+        // Real-world utility logic: The bill currently arrived and due for payment is the
+        // concluded past billing month (e.g. October 2026), not the ongoing current month!
+        String payableMonth = (hh.getPastMonthName() != null && !hh.getPastMonthName().isBlank())
+                ? hh.getPastMonthName()
+                : "October 2026";
+
+        double units = (hh.getPastMonthUnitsKwh() != null && hh.getPastMonthUnitsKwh() >= 0)
+                ? hh.getPastMonthUnitsKwh()
+                : 160.0;
+        double load = (hh.getSanctionedLoadKw() != null && hh.getSanctionedLoadKw() > 0)
+                ? hh.getSanctionedLoadKw()
+                : 2.0;
+        double entitled = (hh.getEntitledUnitsKwh() != null && hh.getEntitledUnitsKwh() > 0)
+                ? hh.getEntitledUnitsKwh()
+                : 176.0;
+
+        BillingService.BillCalculation calc = billingService.calculateBill(units, load, entitled, true);
+
+        // Check if payment or clearance voucher already exists for this payable month
+        List<Payment> existingPayments = paymentRepository.findByUserIdOrderByPaymentDateDesc(user.getId());
+        Payment matchingPayment = existingPayments.stream()
+                .filter(p -> payableMonth.equalsIgnoreCase(p.getBillingMonth()))
+                .findFirst()
+                .orElse(null);
+
+        boolean isPaid = matchingPayment != null;
 
         Map<String, Object> map = new HashMap<>();
         map.put("consumerNumber", hh.getConsumerNumber());
         map.put("meterNumber", hh.getMeterNumber());
         map.put("householdName", hh.getHouseholdName());
-        map.put("billingMonth", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")));
-        map.put("projectedUnitsKwh", Math.round(predictedKwh * 10.0) / 10.0);
-        map.put("grossBillInr", Math.round(grossBill * 100.0) / 100.0);
-        map.put("subsidyBenefitInr", Math.round(subsidy * 100.0) / 100.0);
-        map.put("netPayableInr", Math.round(netPayable * 100.0) / 100.0);
-        map.put("gruhaJyothiStatus", status);
-        map.put("isZeroBill", netPayable <= 0.0);
-        map.put("sanctionedLoadKw", hh.getSanctionedLoadKw());
-        map.put("entitledUnitsKwh", hh.getEntitledUnitsKwh());
+        map.put("billingMonth", payableMonth); // The payable past month bill (e.g. October 2026)
+        map.put("ongoingCycleMonth", LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM yyyy"))); // E.g. November 2026
+        map.put("projectedUnitsKwh", Math.round(units * 10.0) / 10.0);
+        map.put("grossBillInr", calc.getGrossBill());
+        map.put("subsidyBenefitInr", calc.getSubsidyDeduction());
+        map.put("netPayableInr", isPaid ? 0.0 : calc.getNetPayable());
+        map.put("gruhaJyothiStatus", calc.getSubsidyStatus());
+        map.put("isZeroBill", calc.getNetPayable() <= 0.0);
+        map.put("isPaid", isPaid);
+        map.put("sanctionedLoadKw", load);
+        map.put("entitledUnitsKwh", entitled);
+        map.put("billStatus", isPaid ? "PAID & CLEARED" : (calc.getNetPayable() <= 0.0 ? "ZERO-BILL DUE" : "PAYMENT DUE"));
+
+        if (matchingPayment != null) {
+            map.put("paidTransactionReference", matchingPayment.getTransactionReference());
+            map.put("paidDate", matchingPayment.getPaymentDate().toString());
+            map.put("paymentMethod", matchingPayment.getPaymentMethod());
+        }
 
         return map;
     }
